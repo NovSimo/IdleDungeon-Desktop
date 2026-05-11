@@ -17,3 +17,16 @@ Thumbs.db
 # 编译产物
 build/
 export/
+
+# Dependencies
+node_modules/
+
+# 工作内存
+.workbuddy/
+
+# Codebuddy
+.codebuddy/
+
+# 临时文件
+*.log
+*.tmp
