@@ -1,0 +1,16 @@
+{
+  "name": "idledungeon-server",
+  "version": "0.1.0",
+  "description": "IdleDungeon 悬浮地牢 — 服务端挂机逻辑",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

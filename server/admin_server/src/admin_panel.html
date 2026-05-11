@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IdleDungeon 管理后台</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f1117;color:#e0e0e0}
+a{color:#7cb3ff;text-decoration:none}a:hover{text-decoration:underline}
+
+/* 登录页 */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh}
+#login-screen h1{font-size:2rem;margin-bottom:1.5rem;color:#fff}
+#login-screen input{width:260px;padding:10px 14px;font-size:1rem;border:1px solid #333;border-radius:6px;background:#1a1d26;color:#e0e0e0;margin-bottom:.5rem}
+#login-screen button{width:260px;padding:10px 14px;font-size:1rem;border:none;border-radius:6px;background:#4f7cff;color:#fff;cursor:pointer;margin-top:.5rem}
+#login-screen button:hover{background:#6b94ff}
+#login-error{color:#ff6b6b;margin-top:.5rem;font-size:.9rem;height:1.2rem}
+
+/* 主界面 */
+#main-screen{display:none;height:100vh;overflow:hidden}
+.layout{display:flex;height:100vh}
+.sidebar{width:220px;background:#161922;border-right:1px solid #222;display:flex;flex-direction:column}
+.sidebar-header{padding:1rem;border-bottom:1px solid #222;display:flex;align-items:center;gap:.5rem}
+.sidebar-header h2{font-size:1rem;color:#fff}
+.sidebar-nav{flex:1;overflow-y:auto;padding:.5rem 0}
+.nav-item{padding:.6rem 1rem;cursor:pointer;border-left:3px solid transparent;color:#999;font-size:.9rem}
+.nav-item:hover{background:#1e2230;color:#e0e0e0}
+.nav-item.active{border-left-color:#4f7cff;background:#1e2230;color:#fff}
+.nav-footer{padding:.8rem 1rem;border-top:1px solid #222;font-size:.8rem;color:#666}
+
+.content{flex:1;overflow-y:auto;padding:1.5rem}
+.content h1{font-size:1.4rem;color:#fff;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.badge{padding:2px 8px;border-radius:10px;font-size:.75rem;font-weight:normal}
+.badge-green{background:#1a3a1a;color:#5fca5f}
+.badge-red{background:#3a1a1a;color:#ff6b6b}
+.badge-blue{background:#1a1a3a;color:#7cb3ff}
+
+/* 表格 */
+table{width:100%;border-collapse:collapse;margin-bottom:1rem}
+th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid #222;font-size:.9rem}
+th{color:#888;font-weight:500;font-size:.8rem;text-transform:uppercase}
+tr:hover td{background:#1a1d26}
+.mono{font-family:'Courier New',monospace;font-size:.85rem}
+
+/* 按钮 */
+.btn{padding:5px 12px;border:none;border-radius:4px;cursor:pointer;font-size:.85rem;transition:.15s}
+.btn-blue{background:#4f7cff;color:#fff}.btn-blue:hover{background:#6b94ff}
+.btn-red{background:#ff4f4f;color:#fff}.btn-red:hover{background:#ff6b6b}
+.btn-gray{background:#2a2d38;color:#aaa}.btn-gray:hover{background:#3a3d48}
+.btn-sm{padding:3px 8px;font-size:.8rem}
+.btn-group{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem}
+
+/* 卡片 */
+.card{background:#161922;border:1px solid #222;border-radius:8px;padding:1rem;margin-bottom:1rem}
+.card-title{font-size:.85rem;color:#888;margin-bottom:.3rem;text-transform:uppercase}
+.card-value{font-size:1.8rem;color:#fff;font-weight:bold}
+
+/* 角色卡片 */
+.char-card{background:#1a1d26;border-radius:6px;padding:.8rem;margin-bottom:.5rem;border:1px solid #222}
+.char-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;flex-wrap:wrap;gap:.4rem}
+.char-name{font-weight:bold;color:#fff}
+.char-meta{font-size:.8rem;color:#888}
+.progress-bar{height:6px;background:#222;border-radius:3px;overflow:hidden;margin-top:.4rem}
+.progress-fill{height:100%;background:#4f7cff;border-radius:3px;transition:width .3s}
+.progress-fill.danger{background:#ff4f4f}
+
+/* 表单行 */
+.form-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.5rem 0}
+.form-row label{font-size:.85rem;color:#999;width:80px;flex-shrink:0}
+.form-row input,.form-row select{background:#1a1d26;border:1px solid #333;border-radius:4px;color:#e0e0e0;padding:5px 8px;font-size:.85rem}
+.form-row input{width:180px}
+.form-row select{width:auto}
+
+/* 模态框 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#161922;border:1px solid #333;border-radius:10px;padding:1.5rem;min-width:380px;max-width:560px}
+.modal h3{margin-bottom:1rem;color:#fff}
+.modal-actions{display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem}
+.modal p{color:#ccc;font-size:.95rem;line-height:1.6}
+
+/* Toast */
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:.7rem 1.2rem;border-radius:6px;font-size:.9rem;opacity:0;transition:opacity .3s;z-index:200;pointer-events:none}
+#toast.show{opacity:1}
+#toast.success{background:#1a3a1a;color:#5fca5f;border:1px solid #2a5a2a}
+#toast.error{background:#3a1a1a;color:#ff6b6b;border:1px solid #5a2a2a}
+
+/* 设施标签 */
+.fac-tag{display:inline-block;background:#1a1d26;border:1px solid #333;border-radius:4px;padding:2px 8px;font-size:.8rem;margin:2px}
+</style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="login-screen">
+  <h1>🏰 IdleDungeon 管理后台</h1>
+  <input type="password" id="pass-input" placeholder="输入管理员密码" onkeydown="if(event.key==='Enter')doLogin()">
+  <button onclick="doLogin()">登录</button>
+  <div id="login-error"></div>
+</div>
+
+<!-- 主界面 -->
+<div id="main-screen">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-header"><span>🏰</span><h2>IdleDungeon</h2></div>
+      <div class="sidebar-nav">
+        <div class="nav-item active" data-view="players">👥 玩家列表</div>
+        <div class="nav-item" data-view="stats">📊 数据概览</div>
+      </div>
+      <div class="nav-footer">
+        Admin v0.1<br>
+        <a href="#" onclick="doLogout();return false" style="color:#ff6b6b">退出登录</a>
+      </div>
+    </div>
+    <div class="content" id="content"><!-- 动态渲染 --></div>
+  </div>
+</div>
+
+<!-- 通用模态框 -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">操作</h3>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal()">取消</button>
+      <button class="btn btn-blue" id="modal-confirm" onclick="modalConfirm()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── 全局状态 ──
+var ws = null;
+var sessionToken = null;
+var currentView = 'players';
+var modalCB = null;
+var currentPlayerId = null;
+
+// ── WebSocket ──
+function connectWS() {
+  var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host);
+  ws.onopen = function() { console.log('[WS] connected'); };
+  ws.onclose = function() { ws = null; setTimeout(connectWS, 3000); };
+  ws.onerror = function(e) { console.error('[WS] error', e); };
+  ws.onmessage = onWSMessage;
+}
+
+function wsSend(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+  else console.warn('[WS] not connected');
+}
+
+function onWSMessage(e) {
+  var msg = JSON.parse(e.data);
+
+  if (msg.action === 'admin_login_response') {
+    if (msg.ok) {
+      sessionToken = msg.data.token;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-screen').style.display = 'block';
+      showView('players');
+    } else {
+      document.getElementById('login-error').textContent = msg.error || '密码错误';
+    }
+    return;
+  }
+
+  if (msg.token !== sessionToken) return;
+
+  if (msg.action === 'admin_list_players_response') { renderPlayerList(msg.data); return; }
+  if (msg.action === 'admin_get_player_response')   { renderPlayerDetail(msg.data); return; }
+  if (msg.action === 'admin_stats_response')         { renderStats(msg.data); return; }
+
+  // 通用操作响应
+  var opActions = ['admin_give_item','admin_set_gold','admin_set_fatigue','admin_set_hp',
+                   'admin_force_work','admin_cancel_work','admin_delete_player'];
+  if (opActions.indexOf(msg.action) >= 0) {
+    if (msg.ok) {
+      toast('操作成功', 'success');
+      closeModal();
+      if (currentPlayerId) {
+        wsSend({ action:'admin_get_player', token:sessionToken, playerId:currentPlayerId });
+      } else {
+        wsSend({ action:'admin_list_players', token:sessionToken });
+      }
+    } else {
+      toast('错误: ' + (msg.error || '操作失败'), 'error');
+    }
+  }
+}
+
+// ── 登录 ──
+function doLogin() {
+  var pass = document.getElementById('pass-input').value;
+  if (!pass) return;
+  wsSend({ action:'admin_login', password:pass });
+}
+
+function doLogout() {
+  sessionToken = null;
+  currentPlayerId = null;
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('pass-input').value = '';
+}
+
+// ── 视图切换 ──
+function showView(view) {
+  currentView = view;
+  document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelector('.nav-item[data-view="'+view+'"]').classList.add('active');
+  if (!sessionToken) return;
+
+  if (view === 'players') {
+    setContent('<div class="card"><p style="color:#888">加载中...</p></div>');
+    wsSend({ action:'admin_list_players', token:sessionToken });
+  }
+  if (view === 'stats') {
+    setContent('<div class="card"><p style="color:#888">加载中...</p></div>');
+    wsSend({ action:'admin_stats', token:sessionToken });
+  }
+}
+
+function setContent(html) {
+  document.getElementById('content').innerHTML = html;
+}
+
+// ── 渲染：玩家列表 ──
+function renderPlayerList(players) {
+  if (!players || players.length === 0) {
+    setContent('<h1>👥 玩家列表</h1><div class="card"><p style="color:#888">暂无玩家数据</p></div>');
+    return;
+  }
+  var rows = players.map(function(p) {
+    var lastOnline = p.lastOnline ? timeAgo(p.lastOnline) : '从未';
+    var charBadge = p.workingChars > 0
+      ? '<span class="badge badge-blue">' + p.workingChars + '工作中</span>'
+      : '<span class="badge badge-green">空闲</span>';
+    return '<tr>' +
+      '<td class="mono">' + escHtml(p.playerId) + '</td>' +
+      '<td>💰 ' + p.gold.toLocaleString() + '</td>' +
+      '<td>' + p.totalChars + '人 ' + charBadge + '</td>' +
+      '<td style="color:#888;font-size:.8rem">' + escHtml(lastOnline) + '</td>' +
+      '<td>' +
+        '<button class="btn btn-blue btn-sm" onclick="loadPlayer(\''+escAttr(p.playerId)+'\')">详情</button> ' +
+        '<button class="btn btn-red btn-sm" onclick="confirmDelete(\''+escAttr(p.playerId)+'\')">删除</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  setContent(
+    '<h1>👥 玩家列表 <span class="badge badge-green">' + players.length + ' 人</span></h1>' +
+    '<div class="card" style="overflow-x:auto">' +
+      '<table><thead><tr><th>Player ID</th><th>金币</th><th>角色</th><th>最后上线</th><th>操作</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>' +
+    '</div>'
+  );
+}
+
+// ── 渲染：玩家详情 ──
+function renderPlayerDetail(data) {
+  currentPlayerId = data.playerId;
+  var playerId = data.playerId;
+  var gold = data.gold || 0;
+  var inventory = data.inventory || {};
+  var facilities = data.facilities || {};
+  var characters = data.characters || [];
+
+  // 物品
+  var invKeys = Object.keys(inventory);
+  var invRows = '';
+  if (invKeys.length === 0) {
+    invRows = '<tr><td colspan="3" style="color:#888">无物品</td></tr>';
+  } else {
+    invRows = invKeys.map(function(k) {
+      var v = inventory[k];
+      if (typeof v === 'object') v = v.count || 0;
+      return '<tr><td class="mono">' + escHtml(k) + '</td><td>' + Number(v).toLocaleString() + '</td>' +
+             '<td><button class="btn btn-red btn-sm" onclick="confirmGiveItem(\''+escAttr(playerId)+'\',\''+escAttr(k)+'\','+(-Number(v))+')">扣全部</button></td></tr>';
+    }).join('');
+  }
+
+  // 设施
+  var facRows = '';
+  if (Object.keys(facilities).length === 0) {
+    facRows = '<span style="color:#888">暂无设施</span>';
+  } else {
+    facRows = Object.keys(facilities).map(function(k) {
+      return '<span class="fac-tag">' + escHtml(k) + ' Lv.' + facilities[k] + '</span>';
+    }).join(' ');
+  }
+
+  // 角色卡片
+  var charCards = '';
+  if (characters.length === 0) {
+    charCards = '<p style="color:#888">无角色</p>';
+  } else {
+    charCards = characters.map(function(c) {
+      var workBadge = c.currentWork
+        ? '<span class="badge badge-blue">' + escHtml(c.currentWork.operation) + ' · ' + Math.round(c.currentWork.remaining||0) + 's</span>'
+        : '<span class="badge badge-green">空闲</span>';
+      var fatPct = Math.round((c.fatigue / 100) * 100);
+      var fatClass = c.fatigue >= 80 ? 'danger' : '';
+      var workBtns = c.currentWork
+        ? '<button class="btn btn-red btn-sm" onclick="confirmForceWork(\''+escAttr(playerId)+'\',\''+escAttr(c.id)+'\')">强制完成</button> ' +
+          '<button class="btn btn-red btn-sm" onclick="confirmCancelWork(\''+escAttr(playerId)+'\',\''+escAttr(c.id)+'\')">取消工作</button>'
+        : '';
+      return '<div class="char-card">' +
+        '<div class="char-header">' +
+          '<span class="char-name">' + escHtml(c.name || c.id) + '</span>' +
+          '<span class="char-meta">' + escHtml(c.classId) + ' · ' + escHtml(c.rarity) + '</span>' +
+          workBadge +
+        '</div>' +
+        '<div class="char-meta">HP: ' + c.hp + ' &nbsp;|&nbsp; 疲劳: ' + c.fatigue + '% &nbsp;|&nbsp; 休息加成: ' + (c.restBonus||0) + '</div>' +
+        '<div class="progress-bar"><div class="progress-fill ' + fatClass + '" style="width:' + fatPct + '%"></div></div>' +
+        '<div class="btn-group">' +
+          '<button class="btn btn-gray btn-sm" onclick="openFatigueModal(\''+escAttr(playerId)+'\',\''+escAttr(c.id)+'\','+c.fatigue+')">调疲劳</button>' +
+          '<button class="btn btn-gray btn-sm" onclick="openHpModal(\''+escAttr(playerId)+'\',\''+escAttr(c.id)+'\','+c.hp+')">调HP</button>' +
+          workBtns +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  setContent(
+    '<h1>' +
+      '<a href="#" onclick="showView(\'players\');return false" style="color:#7cb3ff;font-size:.9rem">← 玩家列表</a>' +
+      ' &nbsp;' + escHtml(playerId) +
+      '<span style="margin-left:auto;display:flex;gap:.4rem;align-items:center">' +
+        '<button class="btn btn-blue" onclick="openGiveItemModal(\''+escAttr(playerId)+'\')">+ 加物品</button>' +
+        '<button class="btn btn-gray" onclick="openGoldModal(\''+escAttr(playerId)+'\','+gold+')">💰 调金币</button>' +
+      '</span>' +
+    '</h1>' +
+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.8rem;margin-bottom:1rem">' +
+      '<div class="card"><div class="card-title">💰 金币</div><div class="card-value">' + gold.toLocaleString() + '</div></div>' +
+      '<div class="card"><div class="card-title">👥 角色</div><div class="card-value">' + characters.length + '</div></div>' +
+      '<div class="card"><div class="card-title">🏗️ 设施总数</div><div class="card-value">' + Object.values(facilities).reduce(function(a,b){return a+b;},0) + '</div></div>' +
+    '</div>' +
+
+    '<h1 style="font-size:1.1rem;margin-top:1.5rem">🏗️ 设施</h1>' +
+    '<div class="card">' + facRows + '</div>' +
+
+    '<h1 style="font-size:1.1rem;margin-top:1.5rem">👥 角色</h1>' + charCards +
+
+    '<h1 style="font-size:1.1rem;margin-top:1.5rem">🎒 物品</h1>' +
+    '<div class="card" style="overflow-x:auto">' +
+      '<table><thead><tr><th>物品ID</th><th>数量</th><th>操作</th></tr></thead>' +
+      '<tbody>' + invRows + '</tbody></table>' +
+    '</div>'
+  );
+}
+
+// ── 渲染：数据概览 ──
+function renderStats(data) {
+  setContent(
+    '<h1>📊 数据概览</h1>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.8rem;margin-bottom:1rem">' +
+      '<div class="card"><div class="card-title">👥 玩家总数</div><div class="card-value">' + data.totalPlayers + '</div></div>' +
+      '<div class="card"><div class="card-title">💰 金币总量</div><div class="card-value">' + (data.totalGold||0).toLocaleString() + '</div></div>' +
+      '<div class="card"><div class="card-title">👥 角色总数</div><div class="card-value">' + data.totalChars + '</div></div>' +
+    '</div>'
+  );
+}
+
+// ── 加载玩家详情 ──
+function loadPlayer(playerId) {
+  wsSend({ action:'admin_get_player', token:sessionToken, playerId:playerId });
+}
+
+// ── 模态框 ──
+function openModal(title, bodyHTML, onConfirm) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  document.getElementById('modal-overlay').classList.add('show');
+  modalCB = onConfirm;
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+  modalCB = null;
+}
+
+function modalConfirm() {
+  if (modalCB) modalCB();
+}
+
+// ── 快捷操作模态框 ──
+function openGiveItemModal(playerId) {
+  openModal('加物品',
+    '<div class="form-row"><label>物品ID</label><input id="m-item-id" placeholder="herb_common"></div>' +
+    '<div class="form-row"><label>数量</label><input id="m-item-count" type="number" value="10" min="1"></div>',
+    function() {
+      wsSend({
+        action:'admin_give_item', token:sessionToken,
+        playerId:playerId,
+        itemId:document.getElementById('m-item-id').value.trim(),
+        count:parseInt(document.getElementById('m-item-count').value)||0
+      });
+    }
+  );
+}
+
+function confirmGiveItem(playerId, itemId, count) {
+  var n = Math.abs(count);
+  openModal('扣物品',
+    '<p>确定扣除 <b>' + escHtml(itemId) + '</b> × ' + n + ' 吗？</p>',
+    function() {
+      wsSend({ action:'admin_give_item', token:sessionToken, playerId:playerId, itemId:itemId, count:count });
+    }
+  );
+}
+
+function openGoldModal(playerId, currentGold) {
+  openModal('设置金币',
+    '<div class="form-row"><label>金币</label><input id="m-gold" type="number" value="' + currentGold + '" min="0"></div>',
+    function() {
+      wsSend({ action:'admin_set_gold', token:sessionToken, playerId:playerId, gold:parseInt(document.getElementById('m-gold').value)||0 });
+    }
+  );
+}
+
+function openFatigueModal(playerId, charId, currentFat) {
+  openModal('设置疲劳',
+    '<div class="form-row"><label>疲劳值</label><input id="m-fat" type="number" value="' + currentFat + '" min="0" max="100"></div>',
+    function() {
+      wsSend({ action:'admin_set_fatigue', token:sessionToken, playerId:playerId, charId:charId, fatigue:parseInt(document.getElementById('m-fat').value)||0 });
+    }
+  );
+}
+
+function openHpModal(playerId, charId, currentHp) {
+  openModal('设置生命值',
+    '<div class="form-row"><label>HP</label><input id="m-hp" type="number" value="' + currentHp + '" min="0"></div>',
+    function() {
+      wsSend({ action:'admin_set_hp', token:sessionToken, playerId:playerId, charId:charId, hp:parseInt(document.getElementById('m-hp').value)||0 });
+    }
+  );
+}
+
+function confirmForceWork(playerId, charId) {
+  openModal('强制完成',
+    '<p>确定强制完成该角色当前工作吗？<br><span style="color:#ff6b6b">不会发放奖励。</span></p>',
+    function() {
+      wsSend({ action:'admin_force_work', token:sessionToken, playerId:playerId, charId:charId });
+    }
+  );
+}
+
+function confirmCancelWork(playerId, charId) {
+  openModal('取消工作',
+    '<p>确定取消该角色当前工作吗？</p>',
+    function() {
+      wsSend({ action:'admin_cancel_work', token:sessionToken, playerId:playerId, charId:charId });
+    }
+  );
+}
+
+function confirmDelete(playerId) {
+  openModal('删除玩家',
+    '<p style="color:#ff6b6b">⚠️ 确定删除玩家 <b>' + escHtml(playerId) + '</b> 吗？<br>此操作不可恢复！</p>',
+    function() {
+      wsSend({ action:'admin_delete_player', token:sessionToken, playerId:playerId });
+      currentPlayerId = null;
+    }
+  );
+}
+
+// ── Toast ──
+function toast(msg, type) {
+  type = type || 'success';
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(function(){ t.className = ''; }, 3000);
+}
+
+// ── 工具函数 ──
+function timeAgo(ts) {
+  var diff = Date.now() - ts;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.round(diff/60000) + '分钟前';
+  if (diff < 86400000) return Math.round(diff/3600000) + '小时前';
+  return Math.round(diff/86400000) + '天前';
+}
+
+function escHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// ── 侧边栏点击事件 ──
+document.querySelectorAll('.nav-item').forEach(function(el) {
+  el.addEventListener('click', function() {
+    var view = this.getAttribute('data-view');
+    if (view) showView(view);
+  });
+});
+
+// ── 启动 ──
+connectWS();
+</script>
+</body>
+</html>

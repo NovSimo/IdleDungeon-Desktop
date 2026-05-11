@@ -1,0 +1,127 @@
+[gd_scene load_steps=2 format=3 uid="uid://bmanagement_panel"]
+
+[ext_resource type="Script" path="res://scripts/ui/management_panel.gd" id="1_mp"]
+
+[node name="ManagementPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mp")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 6
+
+# ============================================================
+# 顶部栏
+# ============================================================
+[node name="TopBar" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="VBox/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🏭 经营管理"
+
+[node name="HSpacer" type="Control" parent="VBox/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GoldIcon" type="Label" parent="VBox/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "💰 1000"
+
+[node name="CollectAllButton" type="Button" parent="VBox/TopBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "全部收取"
+
+# ============================================================
+# Tab容器
+# ============================================================
+[node name="TabContainer" type="TabContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+tab_align = 0
+
+# --- 设施Tab ---
+[node name="FacilitiesTab" type="ScrollContainer" parent="VBox/TabContainer"]
+layout_mode = 2
+name = "设施"
+horizontal_scroll_mode = 0
+
+[node name="FacilityScroll" type="ScrollContainer" parent="VBox/TabContainer/FacilitiesTab"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="FacilityList" type="VBoxContainer" parent="VBox/TabContainer/FacilitiesTab/FacilityScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="PlaceholderLabel" type="Label" parent="VBox/TabContainer/FacilitiesTab/FacilityScroll/FacilityList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
+text = "暂无设施，探索地牢解锁新设施"
+
+# --- 工作Tab ---
+[node name="WorkTab" type="VBoxContainer" parent="VBox/TabContainer"]
+layout_mode = 2
+name = "工作"
+theme_override_constants/separation = 4
+
+[node name="AvailableLabel" type="Label" parent="VBox/TabContainer/WorkTab"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.870588, 0.501961, 1)
+theme_override_font_sizes/font_size = 14
+text = "📋 可分配工作"
+
+[node name="AvailableScroll" type="ScrollContainer" parent="VBox/TabContainer/WorkTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="AvailableList" type="VBoxContainer" parent="VBox/TabContainer/WorkTab/AvailableScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="HSeparator" type="HSeparator" parent="VBox/TabContainer/WorkTab"]
+layout_mode = 2
+
+[node name="ActiveLabel" type="Label" parent="VBox/TabContainer/WorkTab"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 14
+text = "⚡ 进行中"
+
+[node name="ActiveScroll" type="ScrollContainer" parent="VBox/TabContainer/WorkTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ActiveList" type="VBoxContainer" parent="VBox/TabContainer/WorkTab/ActiveScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="PlaceholderLabel2" type="Label" parent="VBox/TabContainer/WorkTab/ActiveScroll/ActiveList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
+text = "当前无进行中的工作"

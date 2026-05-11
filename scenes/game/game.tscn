@@ -1,0 +1,73 @@
+[gd_scene load_steps=6 format=3 uid="uid://bgame_scene"]
+
+[ext_resource type="Script" path="res://scenes/game/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/components/floating_window_manager.gd" id="2_fwm"]
+[ext_resource type="PackedScene" path="res://scenes/ui/character_panel.tscn" id="3_cp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/management_panel.tscn" id="4_mp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dungeon_panel.tscn" id="5_dp"]
+
+[node name="GameScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_game")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.06, 0.12, 0.95)
+
+[node name="FloatingWindowManager" type="Node" parent="."]
+script = ExtResource("2_fwm")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="TopBar" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ConnectionIndicator" type="ColorRect" parent="VBox/TopBar"]
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+color = Color.RED
+
+[node name="CurrencyLabel" type="Label" parent="VBox/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+text = "金币: 0"
+
+[node name="HSpacer" type="Control" parent="VBox/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ModeButton" type="Button" parent="VBox/TopBar"]
+layout_mode = 2
+text = "完整"
+
+[node name="TabContainer" type="TabContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CharacterPanel" parent="VBox/TabContainer" instance=ExtResource("3_cp")]
+tab_index = 0
+
+[node name="ManagementPanel" parent="VBox/TabContainer" instance=ExtResource("4_mp")]
+tab_index = 1
+
+[node name="DungeonPanel" parent="VBox/TabContainer" instance=ExtResource("5_dp")]
+tab_index = 2

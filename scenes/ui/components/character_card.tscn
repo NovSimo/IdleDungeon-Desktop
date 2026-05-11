@@ -1,0 +1,135 @@
+[gd_scene load_steps=3 format=3 uid="uid://bcharacter_card"]
+
+[ext_resource type="Script" path="res://scripts/ui/components/character_card.gd" id="1_cc"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.145098, 0.145098, 0.180392, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.290196, 0.290196, 0.431373, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="CharacterCard" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cc")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 2.0
+offset_right = -4.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="NameRow" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="Panel/VBox/NameRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "角色名"
+
+[node name="ClassLabel" type="Label" parent="Panel/VBox/NameRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
+theme_override_font_sizes/font_size = 14
+text = "职业·"
+
+[node name="LevelLabel" type="Label" parent="Panel/VBox/NameRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
+theme_override_font_sizes/font_size = 14
+text = "Lv.?"
+
+[node name="HSpacer" type="Control" parent="Panel/VBox/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusLabel" type="Label" parent="Panel/VBox/NameRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_font_sizes/font_size = 14
+text = "空闲"
+
+[node name="FatigueContainer" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FatigueBar" type="ProgressBar" parent="Panel/VBox/FatigueContainer"]
+custom_minimum_size = Vector2(120, 8)
+layout_mode = 2
+max_value = 100.0
+value = 30.0
+show_percentage = false
+
+[node name="FatigueLabel" type="Label" parent="Panel/VBox/FatigueContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
+theme_override_font_sizes/font_size = 12
+text = "疲劳: 30%"
+
+[node name="ButtonRow" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WorkButton" type="Button" parent="Panel/VBox/ButtonRow"]
+custom_minimum_size = Vector2(80, 28)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.290196, 0.431373, 1)
+theme_override_font_sizes/font_size = 12
+text = "工作"
+
+[node name="DungeonButton" type="Button" parent="Panel/VBox/ButtonRow"]
+custom_minimum_size = Vector2(80, 28)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.643137, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "探险"
+
+[node name="WorkProgressBar" type="ProgressBar" parent="Panel/VBox"]
+visible = false
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+max_value = 100.0
+value = 50.0
+show_percentage = false
+
+[node name="WorkInfoLabel" type="Label" parent="Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.870588, 0.501961, 1)
+theme_override_font_sizes/font_size = 12
+text = "🌿 采集中 [30s]"
+
+[connection signal="gui_input" from="." to="." method="_on_gui_input"]
+[connection signal="pressed" from="Panel/VBox/ButtonRow/WorkButton" to="." method="_on_work_button_pressed"]
+[connection signal="pressed" from="Panel/VBox/ButtonRow/DungeonButton" to="." method="_on_dungeon_button_pressed"]
