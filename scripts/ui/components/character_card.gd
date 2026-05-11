@@ -89,7 +89,8 @@ func _update_display() -> void:
 	_name_label.text = "%s" % char_name
 	_name_label.add_theme_color_override("font_color", _theme.get_quality_color(rarity))
 	_class_label.text = "%s·" % class_name
-	_level_label.text = "Lv.?"  # TODO: 从服务端获取等级
+	var char_level: int = int(_character_data.get("level", 1))
+	_level_label.text = "Lv.%d" % char_level
 
 	# 状态
 	if _character_data.get("locked", false):

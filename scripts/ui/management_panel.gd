@@ -124,6 +124,8 @@ func _connect_signals() -> void:
 	EventBus.currency_changed.connect(_on_currency_changed)
 	EventBus.facility_upgraded.connect(_on_facility_upgraded)
 	EventBus.resources_collected.connect(_on_resources_collected)
+	EventBus.game_tick.connect(_on_game_tick)
+	EventBus.server_push_received.connect(_on_server_push)
 
 func _update_gold_display() -> void:
 	_gold_label.text = "💰 %d" % _gold
@@ -284,6 +286,25 @@ func _on_resources_collected(_resource_type: StringName, _amount: int) -> void:
 	# 刷新UI（可选）
 	pass
 
+func _on_game_tick(delta: float) -> void:
+	# 对每个进行中的工作递减 remaining
+	var needs_refresh: bool = false
+	for i in range(_active_work.size()):
+		if _active_work[i].get("remaining", 0.0) > 0:
+			_active_work[i]["remaining"] -= delta
+			needs_refresh = true
+			if _active_work[i]["remaining"] <= 0:
+				_active_work[i]["remaining"] = 0.0
+	if needs_refresh:
+		_refresh_active_work()
+
+func _on_server_push(event_name: StringName, payload: Dictionary) -> void:
+	match event_name:
+		&"collect_result":
+			_show_rewards_popup(payload.get("rewards", []))
+		&"offline_rewards":
+			_show_rewards_popup(payload.get("rewards", []), "离线奖励")
+
 func _on_facility_upgrade_requested(facility_id: String) -> void:
 	upgrade_facility_requested.emit(facility_id)
 
@@ -293,9 +314,133 @@ func _on_facility_build_requested(facility_id: String) -> void:
 func _on_assign_work_button_pressed(data: Dictionary) -> void:
 	var operation: String = data.get("operation", "")
 	var target_id: String = data.get("targetId", "")
-	# TODO: 选择角色对话框
-	# 暂时假设选择第一个角色
-	work_assign_requested.emit("char_001", operation, target_id)
+
+	# 从 GameManager 获取空闲角色列表
+	var all_characters: Array[Dictionary] = GameManager.get_characters()
+	var idle_characters: Array[Dictionary] = []
+
+	for char_data in all_characters:
+		if not char_data.get("isWorking", false) and not char_data.get("locked", false):
+			idle_characters.append(char_data)
+
+	if idle_characters.is_empty():
+		push_warning("[ManagementPanel] 没有可用的工作角色")
+		return
+
+	# 如果只有一个空闲角色，直接指派
+	if idle_characters.size() == 1:
+		var char_id: String = idle_characters[0].get("id", "")
+		work_assign_requested.emit(char_id, operation, target_id)
+		return
+
+	# 多个角色时：暂时选择第一个（后续可加选择对话框）
+	# TODO: 弹出角色选择对话框
+	var char_id: String = idle_characters[0].get("id", "")
+	work_assign_requested.emit(char_id, operation, target_id)
 
 func _on_collect_work_button_pressed(char_id: String) -> void:
 	collect_requested.emit(char_id)
+
+# ============================================================
+# 奖励展示
+# ============================================================
+
+func _show_rewards_popup(rewards: Array, title: String = "收获") -> void:
+	if rewards.is_empty():
+		return
+
+	# 创建奖励弹窗
+	var dialog := AcceptDialog.new()
+	dialog.title = title
+	dialog.min_size = Vector2(280, 160)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	for reward: Dictionary in rewards:
+		var item_id: String = reward.get("id", "unknown")
+		var count: int = reward.get("count", 0)
+		var quality: String = reward.get("quality", "common")
+		var hbox := HBoxContainer.new()
+		var icon_label := Label.new()
+		icon_label.text = _get_resource_icon(item_id)
+		var info_label := Label.new()
+		info_label.text = " %s x%d" % [_get_resource_name(item_id), count]
+		info_label.add_theme_color_override("font_color", _theme.get_quality_color(quality))
+		hbox.add_child(icon_label)
+		hbox.add_child(info_label)
+		vbox.add_child(hbox)
+
+	# 总计
+	var total_label := Label.new()
+	total_label.text = "共 %d 种物品" % rewards.size()
+	total_label.add_theme_color_override("font_color", _theme.COLOR_GOLD)
+	vbox.add_child(total_label)
+
+	dialog.add_child(vbox)
+	add_child(dialog)
+	dialog.popup_centered()
+
+	# 3秒后自动关闭
+	var tree := get_tree()
+	if tree:
+		tree.create_timer(3.0).timeout.connect(dialog.queue_free)
+
+func _get_resource_icon(resource_id: String) -> String:
+	if resource_id.contains("gold") or resource_id.contains("coin"):
+		return "💰"
+	elif resource_id.contains("herb") or resource_id.contains("plant"):
+		return "🌿"
+	elif resource_id.contains("wood") or resource_id.contains("log"):
+		return "🪵"
+	elif resource_id.contains("ore") or resource_id.contains("stone"):
+		return "🪨"
+	elif resource_id.contains("fish"):
+		return "🐟"
+	elif resource_id.contains("ingot"):
+		return "🔩"
+	elif resource_id.contains("gear"):
+		return "⚙️"
+	elif resource_id.contains("potion"):
+		return "🧪"
+	else:
+		return "📦"
+
+func _get_resource_name(resource_id: String) -> String:
+	var names: Dictionary = {
+		"gold": "金币", "herb": "草药", "wood": "木材",
+		"ore": "矿石", "fish": "鱼", "ingot": "锭",
+		"gear": "零件", "potion": "药水", "food": "食物",
+		"cloth": "布料", "leather": "皮革", "gem": "宝石"
+	}
+	return names.get(resource_id, resource_id)
+
+# ============================================================
+# 全部收取（串行化）
+# ============================================================
+
+var _collect_queue: Array[String] = []
+
+func _on_collect_all_button_pressed() -> void:
+	var completed_char_ids: Array[String] = []
+	for work in _active_work:
+		var remaining: float = work.get("remaining", 0.0)
+		if remaining <= 0:
+			var char_id: String = work.get("charId", "")
+			if char_id != "":
+				completed_char_ids.append(char_id)
+
+	if completed_char_ids.is_empty():
+		return
+
+	_collect_queue = completed_char_ids
+	_do_next_collect()
+
+func _do_next_collect() -> void:
+	if _collect_queue.is_empty():
+		return
+	var char_id: String = _collect_queue.pop_front()
+	collect_requested.emit(char_id)
+	# 间隔 300ms 发送下一个（避免并发问题）
+	await get_tree().create_timer(0.3).timeout
+	_do_next_collect()

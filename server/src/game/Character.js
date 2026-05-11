@@ -84,13 +84,20 @@ class Character {
 
   /** 序列化（保存用）*/
   toJSON() {
+    // 创建 currentWork 的副本，排除 _timeout（Timer 对象无法序列化）
+    let currentWork = null;
+    if (this.currentWork) {
+      currentWork = { ...this.currentWork };
+      delete currentWork._timeout;
+    }
+    
     return {
       id: this.id, name: this.name, classId: this.classId,
       rarity: this.rarity, skin: this.skin,
       skills: this.skills, talents: this.talents,
       hp: this.hp, fatigue: this.fatigue,
       equip: this.equip,
-      currentWork: this.currentWork, workQueue: this.workQueue,
+      currentWork: currentWork, workQueue: this.workQueue,
       idleSince: this.idleSince,
     };
   }

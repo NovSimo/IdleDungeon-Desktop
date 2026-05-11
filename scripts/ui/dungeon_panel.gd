@@ -35,7 +35,7 @@ signal exploration_completed(dungeon_id: String, rewards: Array)
 @onready var _active_dungeon_label: Label = $VBox/ActivePanel/VBox/ActiveDungeonLabel
 @onready var _active_floor_label: Label = $VBox/ActivePanel/VBox/ActiveFloorLabel
 @onready var _active_progress: ProgressBar = $VBox/ActivePanel/VBox/ActiveProgress
-@ononly var _active_character_label: Label = $VBox/ActivePanel/VBox/ActiveCharacterLabel
+@onready var _active_character_label: Label = $VBox/ActivePanel/VBox/ActiveCharacterLabel
 @onready var _claim_button: Button = $VBox/ActivePanel/VBox/ClaimButton
 
 # ============================================================

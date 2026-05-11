@@ -61,7 +61,8 @@ class GameManager {
       const tid = setTimeout(() => {
         this._onWorkComplete(playerId, charId);
       }, durationMs);
-      char.currentWork._timeout = tid;
+      // 存储定时器ID到 _timers，而不是 char.currentWork
+      this._timers[charId] = tid;
     }
 
     player.save();
@@ -102,7 +103,10 @@ class GameManager {
     }
 
     // 清除定时器
-    if (char.currentWork._timeout) clearTimeout(char.currentWork._timeout);
+    if (this._timers[charId]) {
+      clearTimeout(this._timers[charId]);
+      delete this._timers[charId];
+    }
     const rewards = completeWork(player, char);
     player.save();
     return { ok:true, rewards };

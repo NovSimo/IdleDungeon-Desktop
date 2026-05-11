@@ -34,6 +34,7 @@ signal dungeon_requested(character_data: Dictionary)
 @onready var _detail_fatigue_label: Label = $VBox/DetailPanel/VBox/FatigueRow/FatigueLabel
 @onready var _detail_work_button: Button = $VBox/DetailPanel/VBox/ButtonRow/WorkButton
 @onready var _detail_dungeon_button: Button = $VBox/DetailPanel/VBox/ButtonRow/DungeonButton
+@onready var _operation_select: OptionButton = $VBox/DetailPanel/VBox/ButtonRow/OperationSelect
 @onready var _detail_skill_label: Label = $VBox/DetailPanel/VBox/SkillLabel
 
 # ============================================================
@@ -106,6 +107,10 @@ func _connect_signals() -> void:
 
 	if _work_slot_indicator:
 		_work_slot_indicator.slot_clicked.connect(_on_slot_clicked)
+
+	# 连接详情面板按钮
+	if _detail_work_button:
+		_detail_work_button.pressed.connect(_on_detail_work_button_pressed)
 
 func _refresh_character_list() -> void:
 	# 清理旧卡片
@@ -189,13 +194,29 @@ func _update_detail_panel() -> void:
 	var is_working: bool = char_data.get("isWorking", false)
 	var is_locked: bool = char_data.get("locked", false)
 
+	# 填充操作选择下拉框
+	_operation_select.clear()
+	if not is_working and not is_locked:
+		var operations: Array[String] = ["gather", "chop", "mine", "fish"]
+		for i in range(operations.size()):
+			var op: String = operations[i]
+			var icon: String = _theme.get_operation_icon(op)
+			var op_name: String = _theme.get_operation_name(op)
+			_operation_select.add_item("%s %s" % [icon, op_name])
+			_operation_select.set_item_metadata(i, op)
+		_operation_select.disabled = false
+		_operation_select.visible = true
+	else:
+		_operation_select.disabled = true
+		_operation_select.visible = not is_working  # 工作中隐藏
+
 	if is_locked:
 		_detail_work_button.disabled = true
 		_detail_dungeon_button.disabled = true
 	else:
 		_detail_work_button.disabled = false
 		_detail_dungeon_button.disabled = false
-		_detail_work_button.text = "收工" if is_working else "工作"
+		_detail_work_button.text = "收工" if is_working else "开始工作"
 
 # ============================================================
 # 信号回调
@@ -237,3 +258,25 @@ func _on_network_status_changed(connected: bool) -> void:
 func _on_skin_button_pressed() -> void:
 	# TODO: 打开皮肤选择对话框
 	pass
+
+func _on_detail_work_button_pressed() -> void:
+	if _selected_index < 0 or _selected_index >= _characters.size():
+		return
+
+	var char_data: Dictionary = _characters[_selected_index]
+	var is_working: bool = char_data.get("isWorking", false)
+
+	if is_working:
+		# 收取工作
+		work_requested.emit(char_data)
+	else:
+		# 开始工作 -- 携带选中操作类型
+		var selected_op_idx: int = _operation_select.selected
+		var operation: String = "gather"
+		if selected_op_idx >= 0 and _operation_select.has_method("get_item_metadata"):
+			var meta = _operation_select.get_item_metadata(selected_op_idx)
+			if meta != null:
+				operation = String(meta) if typeof(meta) == TYPE_STRING else "gather"
+		char_data["_selected_operation"] = operation
+		char_data["_selected_target"] = "%s_1" % operation
+		work_requested.emit(char_data)

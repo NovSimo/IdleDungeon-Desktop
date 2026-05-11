@@ -16,6 +16,9 @@ enum GameState {
 	PAUSED,       ## 暂停
 }
 
+const SAVE_FILE_PATH: String = "user://idle_dungeon_save.cfg"
+const POLL_INTERVAL: float = 5.0  # 轮询间隔（秒）
+
 ## 游戏初始化完成信号 — 主场景监听此信号切换到游戏界面
 signal game_initialized
 
@@ -25,6 +28,7 @@ var player_state: PlayerStateData = null
 var _current_state: GameState = GameState.LOADING
 var _game_time: float = 0.0
 var _is_initialized: bool = false
+var _poll_timer: Timer = null
 
 ## 当前游戏状态（只读）
 var current_state: GameState:
@@ -45,6 +49,9 @@ func _process(delta: float) -> void:
 	if _current_state == GameState.SIMULATING or _current_state == GameState.IDLE:
 		_game_time += delta
 		EventBus.game_tick.emit(delta)
+
+func _ready() -> void:
+	_setup_poll_timer()
 
 ## 切换游戏状态
 func change_state(new_state: GameState) -> void:
@@ -67,18 +74,47 @@ func start_game() -> void:
 	_load_local_cache()
 
 	change_state(GameState.CONNECTING)
-	await _connect_to_server()
 
+	# 如果已经连接（NetworkManager 自动重连），不需要再次连接
+	if not NetworkManager.is_connected_to_server:
+		await _connect_to_server()
+
+	# 等待 create_player -> get_status 完整流程
 	await _sync_server_state()
 
 	change_state(GameState.IDLE)
 	_is_initialized = true
+
+	# 保存缓存
+	_save_local_cache()
+
+	# 启动状态轮询定时器
+	_start_polling_timer()
+
 	game_initialized.emit()
 
 ## 加载本地缓存数据
 func _load_local_cache() -> void:
-	# TODO: 读取本地 save 文件，恢复离线期间的展示状态
-	pass
+	var config := ConfigFile.new()
+	var err: Error = config.load(SAVE_FILE_PATH)
+	if err != OK:
+		print("[GameManager] 无本地缓存，将创建新存档")
+		return
+
+	# 读取上次使用的 player_id
+	var cached_player_id: String = config.get_value("player", "id", "")
+	if cached_player_id != "":
+		NetworkManager.player_id = cached_player_id
+		print("[GameManager] 恢复玩家ID: %s" % cached_player_id)
+
+## 保存本地缓存（状态同步成功后调用）
+func _save_local_cache() -> void:
+	if player_state == null:
+		return
+	var config := ConfigFile.new()
+	config.set_value("player", "id", player_state.player_id)
+	config.set_value("player", "last_played", Time.get_datetime_string_from_system())
+	config.save(SAVE_FILE_PATH)
 
 ## 连接服务端
 func _connect_to_server() -> void:
@@ -180,3 +216,29 @@ func collect_work(character_id: String) -> void:
 ## 获取金币
 func get_gold() -> int:
 	return player_state.currency if player_state else 0
+
+# ============================================================
+# 轮询定时器（5秒间隔同步服务器状态）
+# ============================================================
+
+func _setup_poll_timer() -> void:
+	_poll_timer = Timer.new()
+	_poll_timer.wait_time = POLL_INTERVAL
+	_poll_timer.one_shot = false
+	_poll_timer.timeout.connect(_on_poll_timeout)
+	add_child(_poll_timer)
+
+func _start_polling_timer() -> void:
+	if _poll_timer == null or not _poll_timer.is_stopped():
+		return
+	if _current_state == GameState.IDLE or _current_state == GameState.SIMULATING:
+		_poll_timer.start()
+		print("[GameManager] 轮询定时器启动，间隔 %.1f 秒" % POLL_INTERVAL)
+
+func _stop_polling_timer() -> void:
+	if _poll_timer:
+		_poll_timer.stop()
+
+func _on_poll_timeout() -> void:
+	if NetworkManager.is_connected_to_server and player_state != null:
+		NetworkManager.get_status()

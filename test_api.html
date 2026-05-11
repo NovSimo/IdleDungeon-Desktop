@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>悬浮地牢 API 测试</title>
+<style>
+body { font-family: sans-serif; padding: 20px; background: #1a1a2e; color: #eee; }
+button { margin: 5px; padding: 8px 12px; }
+pre { background: #16213e; padding: 10px; border-radius: 4px; overflow-x: auto; }
+.success { color: #4ecca3; }
+.error { color: #f05454; }
+</style>
+</head>
+<body>
+<h1>🏰 IdleDungeon API 测试工具</h1>
+<p>WebSocket: <code>ws://localhost:8080</code></p>
+
+<div>
+<button onclick="testCreatePlayer()">1. 创建/登录玩家</button>
+<button onclick="testGetStatus()">2. 获取状态</button>
+<button onclick="testStartWork()">3. 开始工作</button>
+<button onclick="testCollectWork()">4. 收取工作</button>
+<button onclick="testSetSkin()">5. 切换皮肤</button>
+</div>
+
+<h3>输出:</h3>
+<pre id="output"></pre>
+
+<script>
+let ws = null;
+let playerId = "test_001";
+let charId = "";
+
+function log(msg) {
+    const out = document.getElementById('output');
+    out.textContent += msg + '\n';
+}
+
+function connect() {
+    if (ws && ws.readyState === WebSocket.OPEN) return Promise.resolve();
+    
+    return new Promise((resolve, reject) => {
+        ws = new WebSocket('ws://localhost:8080');
+        ws.onopen = () => { log('✅ WebSocket 连接成功'); resolve(); };
+        ws.onerror = (e) => { log('❌ 连接失败'); reject(e); };
+        ws.onmessage = (e) => { log('← ' + e.data); };
+    });
+}
+
+async function testCreatePlayer() {
+    await connect();
+    log('→ 发送 create_player...');
+    ws.send(JSON.stringify({ action: 'create_player', playerId: playerId }));
+}
+
+async function testGetStatus() {
+    await connect();
+    log('→ 发送 get_status...');
+    ws.send(JSON.stringify({ action: 'get_status', playerId: playerId }));
+}
+
+async function testStartWork() {
+    await connect();
+    // 先获取状态得到 charId
+    log('→ 发送 start_work (需要先获取charId)...');
+    log('提示: 请先执行"获取状态"，然后手动修改 charId');
+    // 默认使用 char_001
+    charId = charId || "char_001";
+    ws.send(JSON.stringify({
+        action: 'start_work',
+        playerId: playerId,
+        charId: charId,
+        data: { operation: 'gather', targetId: 'gather_1', mode: 'single' }
+    }));
+}
+
+async function testCollectWork() {
+    await connect();
+    charId = charId || "char_001";
+    log('→ 发送 collect_work...');
+    ws.send(JSON.stringify({
+        action: 'collect_work',
+        playerId: playerId,
+        charId: charId
+    }));
+}
+
+async function testSetSkin() {
+    await connect();
+    charId = charId || "char_001";
+    log('→ 发送 set_skin...');
+    ws.send(JSON.stringify({
+        action: 'set_skin',
+        playerId: playerId,
+        charId: charId,
+        data: { skinId: 'halloween' }
+    }));
+}
+
+// 自动监听消息，提取 charId
+const originalOnMessage = (e) => {
+    try {
+        const msg = JSON.parse(e.data);
+        if (msg.action === 'create_player_response' && msg.ok) {
+            const chars = msg.data?.characters || [];
+            if (chars.length > 0) {
+                charId = chars[0].id;
+                log('📝 获取到 charId: ' + charId);
+            }
+        }
+    } catch(e) {}
+};
+// 需要在 ws.onmessage 中调用，这里简化处理
+</script>
+</body>
+</html>

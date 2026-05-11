@@ -30,7 +30,8 @@ func _ready() -> void:
 	_create_managers()
 	_connect_signals()
 	_setup_ui()
-	_initialize_panels()
+	# 不再直接调用 _initialize_panels()
+	# 改为监听 player_state_synced 信号来初始化
 
 func _create_managers() -> void:
 	_work_manager = WorkManager.new()
@@ -98,6 +99,21 @@ func _on_currency_changed(_old: int, new_amount: int) -> void:
 
 func _on_player_state_synced(data: PlayerStateData) -> void:
 	_update_all_panels()
+	# 首次同步时构建可用工作列表
+	_build_available_work_list(data)
+
+## 构建可用工作列表（基于基础采集操作）
+func _build_available_work_list(_state: PlayerStateData) -> void:
+	var available_work: Array[Dictionary] = []
+	# 基于 API 文档的四种基础采集操作
+	var base_operations: Array[String] = ["gather", "chop", "mine", "fish"]
+	for op in base_operations:
+		available_work.append({
+			"operation": op,
+			"targetId": "%s_1" % op,
+			"displayName": UITheme.get_operation_name(op)
+		})
+	management_panel.set_available_work(available_work)
 
 ## 角色面板请求工作
 func _on_work_requested(character_data: Dictionary) -> void:
@@ -106,8 +122,10 @@ func _on_work_requested(character_data: Dictionary) -> void:
 		# 取消工作 - 收取奖励
 		GameManager.collect_work(char_id)
 	else:
-		# 开始工作 - 默认采集
-		GameManager.assign_work(char_id, "harvest", "region_1_1", "single")
+		# 开始工作 - 读取选中的操作类型（如果有），否则默认 gather
+		var operation: String = character_data.get("_selected_operation", "gather")
+		var target_id: String = character_data.get("_selected_target", "gather_1")
+		GameManager.assign_work(char_id, operation, target_id, "single")
 
 ## 角色面板请求地牢探险
 func _on_dungeon_requested(character_data: Dictionary) -> void:

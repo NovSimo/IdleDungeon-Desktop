@@ -45,15 +45,17 @@ func get_unlocked_facilities() -> Array[FacilityState]:
 
 ## 请求分配角色工作（发送到服务端）
 func request_assign_work(character_id: String, work_type: StringName, facility_id: String = "") -> void:
-	if facility_id != "":
-		NetworkManager.assign_work(character_id, work_type)
-	else:
-		NetworkManager.assign_work(character_id, work_type)
+	var operation: String = String(work_type)
+	# targetId 格式: {operation}_{level}，例如 "gather_1"
+	var target_id: String = "%s_1" % operation if facility_id == "" else facility_id
+	NetworkManager.start_work(character_id, operation, target_id)
 	_active_assignments[character_id] = work_type
 
 ## 请求收集设施产出（发送到服务端）
 func request_collect_resources(facility_id: String) -> void:
-	NetworkManager.collect_resources(facility_id)
+	# TODO: collect_work 需要 charId 而非 facility_id
+	# 需要通过设施找到关联的角色ID，或改变接口设计
+	push_warning("[WorkManager] request_collect_resources 需要重构 - collect_work 需要 charId")
 
 ## 获取工作类型定义
 func get_work_type(work_type_id: StringName) -> WorkTypeData:

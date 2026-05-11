@@ -60,16 +60,9 @@ function rollQuality(skillLevel, equipQualityBonus = 0) {
  * @returns {{main:{id,qty,quality}, sub:{id,qty,quality}|null, duration:number}}
  */
 function calculateGatherOutput(char, region, mode, player) {
-  const skillLevel = char.skills[region.mainOutput.id === 'herb_common' ? 'gather' :
-                                      region.mainOutput.id.includes('wood') ? 'chop' :
-                                      region.mainOutput.id.includes('ore')  ? 'mine' : 'fish'] || 1;
-
   // 自动判定操作类型
-  let operation = 'gather';
-  const mainId = region.mainOutput.id;
-  if (mainId.includes('wood')) operation = 'chop';
-  else if (mainId.includes('ore')) operation = 'mine';
-  else if (mainId.includes('fish')) operation = 'fish';
+  const operation = getOpFromRegion(region);
+  const skillLevel = char.skills[operation] || 1;
 
   const skillBonus   = getSkillBonus(skillLevel);
   const classBonus   = char.getSpecialtyBonus(operation);

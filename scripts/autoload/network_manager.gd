@@ -30,6 +30,9 @@ var _reconnect_timer: float = 0.0
 ## 当前玩家ID（登录后设置）
 var player_id: String = "player_001"
 
+## 最近请求收取的角色ID（用于 collect_work_response 关联）
+var _last_collect_char_id: String = ""
+
 ## 响应回调队列
 var _pending_responses: Dictionary = {}
 
@@ -110,6 +113,7 @@ func start_work(charId: String, operation: String, targetId: String, mode: Strin
 
 ## 收取工作奖励
 func collect_work(charId: String) -> void:
+	_last_collect_char_id = charId
 	_send({
 		"action": "collect_work",
 		"playerId": player_id,
@@ -203,8 +207,10 @@ func _handle_message(text: String) -> void:
 				# 触发离线奖励事件
 				if data.has("rewards"):
 					var rewards: Array = data.get("rewards", [])
-					for reward in rewards:
-						print("[NetworkManager] 离线奖励: %s" % JSON.stringify(reward))
+					if not rewards.is_empty():
+						for reward in rewards:
+							print("[NetworkManager] 离线奖励: %s" % JSON.stringify(reward))
+						EventBus.server_push_received.emit(&"offline_rewards", { "rewards": rewards })
 				# 获取状态
 				get_status()
 			else:
@@ -222,14 +228,25 @@ func _handle_message(text: String) -> void:
 
 		"start_work_response":
 			if ok:
-				print("[NetworkManager] 开始工作成功，时长: %s秒" % data.get("duration", "?"))
+				var duration: float = data.get("duration", 0.0)
+				print("[NetworkManager] 开始工作成功，时长: %ds" % duration)
+				# 立即拉取最新状态以获得 currentWork 数据
+				get_status()
 			else:
 				push_error("[NetworkManager] 开始工作失败: %s" % error)
+				EventBus.server_push_received.emit(&"work_error", { "error": error })
 
 		"collect_work_response":
 			if ok:
 				var rewards: Array = data.get("rewards", [])
 				print("[NetworkManager] 收取奖励: %s" % JSON.stringify(rewards))
+				# 发射信号供 UI 展示奖励
+				EventBus.server_push_received.emit(&"collect_result", {
+					"rewards": rewards,
+					"charId": _last_collect_char_id
+				})
+				# 立即刷新状态
+				get_status()
 			else:
 				push_error("[NetworkManager] 收取奖励失败: %s" % error)
 
@@ -251,18 +268,45 @@ func _parse_player_state(data: Dictionary) -> PlayerStateData:
 	state.player_name = data.get("playerName", "玩家")
 	state.level = data.get("level", 1)
 	state.experience = data.get("experience", 0)
-	state.currency = data.get("gold", 0)
+	state.currency = data.get("gold", 0)  # API 返回 "gold" 字段
+
+	# 保存原始 inventory 数据（用于后续奖励展示）
+	state.set_meta("raw_inventory", data.get("inventory", []))
+	state.set_meta("raw_facilities", data.get("facilities", {}))
 
 	# 解析角色列表
 	var chars_data: Array = data.get("characters", [])
 	for char_dict: Dictionary in chars_data:
 		state.characters.append(CharacterData.from_dict(char_dict))
 
-	# 解析设施列表
-	var fac_data: Array = data.get("facilities", [])
-	for fac_dict: Dictionary in fac_data:
-		state.facilities.append(FacilityState.from_dict(fac_dict))
+	# 解析设施列表 -- API 返回 Dict 格式 {"garden": 1, "forge": 0}
+	var fac_data_raw = data.get("facilities", {})
+	var fac_data: Dictionary = fac_data_raw if fac_data_raw is Dictionary else {}
+	if fac_data.is_empty():
+		# 兼容：如果 API 返回的是 Array（旧格式），跳过
+		pass
+	else:
+		# 新格式：Dict -> FacilityState 列表
+		var fac_names: Dictionary = {
+			"garden": "药园", "forge": "锻造坊", "kitchen": "厨房",
+			"alchemy_lab": "炼金台", "lumber_mill": "伐木场", "mine_shaft": "矿井",
+			"fishing_pond": "鱼塘", "tavern": "酒馆", "warehouse": "仓库",
+			"workshop": "工坊"
+		}
+		for fac_key: String in fac_data.keys():
+			var fac_level: Variant = fac_data[fac_key]
+			if typeof(fac_level) == TYPE_DICTIONARY:
+				# 高级格式：{"garden": {"level": 2, ...}}
+				continue  # 暂不处理
+			var fac_state: FacilityState = FacilityState.new()
+			fac_state.facilityId = fac_key
+			fac_state.facility_id = fac_key
+			fac_state.displayName = fac_names.get(fac_key, fac_key)
+			fac_state.display_name = fac_state.displayName
+			fac_state.level = int(fac_level) if typeof(fac_level) == TYPE_INTEGER else 0
+			fac_state.isUnlocked = int(fac_level) > 0 if typeof(fac_level) == TYPE_INTEGER else false
+			fac_state.is_unlocked = fac_state.isUnlocked
+			state.facilities.append(fac_state)
 
 	state.last_sync_time = Time.get_unix_time_from_system()
-
 	return state

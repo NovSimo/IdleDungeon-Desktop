@@ -4,16 +4,16 @@
  *
  * 通信协议（JSON over WebSocket）:
  *
- *   Client → Server:
- *     { action:'create_player',      playerId,        data:{...} }
- *     { action:'start_work',         playerId, charId, data:{operation, targetId, mode?} }
- *     { action:'collect_work',       playerId, charId }
- *     { action:'get_status',        playerId }
- *     { action:'set_skin',         playerId, charId, data:{skinId} }
+ *   Client → Server（统一格式，参数放在 data 中）:
+ *     { action:'create_player',  playerId,                data:{} }
+ *     { action:'start_work',     playerId,                data:{charId, operation, targetId, mode?} }
+ *     { action:'collect_work',   playerId,                data:{charId} }
+ *     { action:'get_status',     playerId }
+ *     { action:'set_skin',       playerId,                data:{charId, skinId} }
  *
  *   Server → Client:
  *     { action:'<req>_response', ok:bool, error?:string, data?:{} }
- *     { action:'work_complete',     playerId, charId, data:{rewards} }  ← 推送
+ *     { action:'work_complete',  playerId, charId, data:{rewards} }  ← 推送
  */
 
 const http  = require('http');
@@ -57,6 +57,14 @@ const server = http.createServer((req, res) => {
 const wss = new WebSocket.Server({ server });
 const gm  = new GameManager();
 
+/**
+ * 统一提取字段：优先 msg.data.xxx，回退 msg.xxx
+ * 这样无论客户端把参数放在 data 里还是顶层都能兼容
+ */
+function extract(msg, field) {
+  return (msg.data && msg.data[field] !== undefined) ? msg.data[field] : msg[field];
+}
+
 wss.on('connection', (ws, req) => {
   const clientId = `${req.socket.remoteAddress}:${req.socket.remotePort}`;
   console.log(`[连接] ${clientId}`);
@@ -65,55 +73,62 @@ wss.on('connection', (ws, req) => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return send(ws, {ok:false, error:'JSON 格式错误'}); }
 
-    console.log(`[消息] ${msg.action}`, msg);
+    const playerId = extract(msg, 'playerId');
+    console.log(`[消息] ${msg.action}`, playerId);
 
     switch (msg.action) {
 
       case 'create_player': {
-        let player = gm.getPlayer(msg.playerId);
-        if (!player) player = gm.createPlayer(msg.playerId, msg.data || {});
-        const status = gm.getPlayerStatus(msg.playerId);
+        let player = gm.getPlayer(playerId);
+        if (!player) player = gm.createPlayer(playerId, msg.data || {});
+        const status = gm.getPlayerStatus(playerId);
         send(ws, { action:'create_player_response', ok:true, data:status });
         // 计算离线奖励
-        const offline = gm.onPlayerOnline(msg.playerId);
+        const offline = gm.onPlayerOnline(playerId);
         if (offline.length) send(ws, { action:'offline_rewards', data:{ rewards:offline } });
         break;
       }
 
       case 'get_status': {
-        const status = gm.getPlayerStatus(msg.playerId);
+        const status = gm.getPlayerStatus(playerId);
         if (!status) return send(ws, { action:'get_status_response', ok:false, error:'玩家不存在' });
         send(ws, { action:'get_status_response', ok:true, data:status });
         break;
       }
 
       case 'start_work': {
-        const { charId, operation, targetId, mode } = msg.data || {};
-        const result = gm.startWork(msg.playerId, charId, operation, targetId, mode);
+        const charId    = extract(msg, 'charId');
+        const operation = extract(msg, 'operation');
+        const targetId  = extract(msg, 'targetId');
+        const mode      = extract(msg, 'mode');
+        const result = gm.startWork(playerId, charId, operation, targetId, mode);
         send(ws, { action:'start_work_response', ok:result.ok, error:result.error, data:result.ok ? { duration:result.duration } : undefined });
         break;
       }
 
       case 'collect_work': {
-        const result = gm.collectWork(msg.playerId, msg.charId);
+        const charId = extract(msg, 'charId');
+        const result = gm.collectWork(playerId, charId);
         send(ws, { action:'collect_work_response', ok:result.ok, error:result.error, data:result.ok ? { rewards:result.rewards } : undefined });
         break;
       }
 
       case 'set_skin': {
-        const player = gm.getPlayer(msg.playerId);
-        if (!player) return send(ws, { ok:false, error:'玩家不存在' });
-        const char = player.getCharacter(msg.charId);
-        if (!char) return send(ws, { ok:false, error:'角色不存在' });
-        if (char.isWorking) return send(ws, { ok:false, error:'工作中不能切换皮肤' });
-        char.skin = (msg.data && msg.data.skinId) || 'default';
+        const charId = extract(msg, 'charId');
+        const skinId = extract(msg, 'skinId');
+        const player = gm.getPlayer(playerId);
+        if (!player) return send(ws, { action:'set_skin_response', ok:false, error:'玩家不存在' });
+        const char = player.getCharacter(charId);
+        if (!char) return send(ws, { action:'set_skin_response', ok:false, error:'角色不存在' });
+        if (char.isWorking) return send(ws, { action:'set_skin_response', ok:false, error:'工作中不能切换皮肤' });
+        char.skin = skinId || 'default';
         player.save();
         send(ws, { action:'set_skin_response', ok:true });
         break;
       }
 
       default:
-        send(ws, { ok:false, error:`未知操作: ${msg.action}` });
+        send(ws, { action:'error', ok:false, error:`未知操作: ${msg.action}` });
     }
   });
 

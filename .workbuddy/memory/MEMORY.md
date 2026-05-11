@@ -27,6 +27,10 @@
 - 场景: main.tscn(标题+开始按钮) → game.tscn(游戏主界面)
 - 独立面板场景: character_panel.tscn, management_panel.tscn, dungeon_panel.tscn
 - 设计文档: docs/simulation_gameplay_design.md
+- 服务端: Node.js + WebSocket (ws)，端口 8080
+- 服务端启动: `cd server && node src/index.js`
+- 服务端结构: src/index.js → game/{GameManager,Player,Character} → systems/{WorkSystem,GatherSystem} → data/{regions,resources,classes,skins,facilities,recipes} → utils/random
+- 玩家数据持久化: server/data/players/<id>.json
 
 ## 用户偏好
 - 名为陈莫，Mac 用户名 chenmo，位于上海静安
