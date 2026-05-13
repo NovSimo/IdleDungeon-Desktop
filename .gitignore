@@ -27,6 +27,10 @@ node_modules/
 # Codebuddy
 .codebuddy/
 
+# 玩家数据（不要提交）
+server/data/players/
+server/admin_server/data/
+
 # 临时文件
 *.log
 *.tmp
