@@ -1,127 +1,124 @@
-[gd_scene load_steps=2 format=3 uid="uid://bmanagement_panel"]
+[gd_scene load_steps=3 format=3 uid="bmanagement_panel_v2"]
 
 [ext_resource type="Script" path="res://scripts/ui/management_panel.gd" id="1_mp"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.08, 0.12, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.29, 0.43, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [node name="ManagementPanel" type="Control"]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = Control.PRESET_FULL_RECT
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_mp")
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="PanelFrame" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = Control.PRESET_FULL_RECT
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="PanelFrame"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 6
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
+theme_override_constants/separation = 10
 
-# ============================================================
-# 顶部栏
-# ============================================================
-[node name="TopBar" type="HBoxContainer" parent="VBox"]
+# --- 标题栏 ---
+[node name="TitleRow" type="HBoxContainer" parent="PanelFrame/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="VBox/TopBar"]
+[node name="TitleLabel" type="Label" parent="PanelFrame/VBox/TitleRow"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "🏭 经营管理"
 
-[node name="HSpacer" type="Control" parent="VBox/TopBar"]
+[node name="HSpacer" type="Control" parent="PanelFrame/VBox/TitleRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="GoldIcon" type="Label" parent="VBox/TopBar"]
+[node name="GoldLabel" type="Label" parent="PanelFrame/VBox/TitleRow"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "💰 1000"
+theme_override_font_sizes/font_size = 16
+text = "💰 0"
 
-[node name="CollectAllButton" type="Button" parent="VBox/TopBar"]
+[node name="CloseButton" type="Button" parent="PanelFrame/VBox/TitleRow"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+text = "✕"
+
+# --- 内容区（Scroll） ---
+[node name="ContentScroll" type="ScrollContainer" parent="PanelFrame/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ContentArea" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+# 进行中工作区
+[node name="ActiveSection" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ActiveHeader" type="HBoxContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActiveSection"]
+layout_mode = 2
+
+[node name="ActiveLabel" type="Label" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActiveSection/ActiveHeader"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 15
+text = "⚡ 进行中的工作"
+
+[node name="CollectAllBtn" type="Button" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActiveSection/ActiveHeader"]
+custom_minimum_size = Vector2(80, 26)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
 text = "全部收取"
 
-# ============================================================
-# Tab容器
-# ============================================================
-[node name="TabContainer" type="TabContainer" parent="VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-tab_align = 0
-
-# --- 设施Tab ---
-[node name="FacilitiesTab" type="ScrollContainer" parent="VBox/TabContainer"]
-layout_mode = 2
-name = "设施"
-horizontal_scroll_mode = 0
-
-[node name="FacilityScroll" type="ScrollContainer" parent="VBox/TabContainer/FacilitiesTab"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-horizontal_scroll_mode = 0
-
-[node name="FacilityList" type="VBoxContainer" parent="VBox/TabContainer/FacilitiesTab/FacilityScroll"]
+[node name="ActiveList" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActiveSection"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="PlaceholderLabel" type="Label" parent="VBox/TabContainer/FacilitiesTab/FacilityScroll/FacilityList"]
+# 分隔线
+[node name="Sep" type="HSeparator" parent="PanelFrame/VBox/ContentScroll/ContentArea"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
-text = "暂无设施，探索地牢解锁新设施"
 
-# --- 工作Tab ---
-[node name="WorkTab" type="VBoxContainer" parent="VBox/TabContainer"]
+# 可分配工作区
+[node name="AvailableSection" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea"]
 layout_mode = 2
-name = "工作"
-theme_override_constants/separation = 4
+theme_override_constants/separation = 6
 
-[node name="AvailableLabel" type="Label" parent="VBox/TabContainer/WorkTab"]
+[node name="AvailableLabel" type="Label" parent="PanelFrame/VBox/ContentScroll/ContentArea/AvailableSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.290196, 0.870588, 0.501961, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 15
 text = "📋 可分配工作"
 
-[node name="AvailableScroll" type="ScrollContainer" parent="VBox/TabContainer/WorkTab"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="AvailableList" type="VBoxContainer" parent="VBox/TabContainer/WorkTab/AvailableScroll"]
+[node name="AvailableList" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea/AvailableSection"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="HSeparator" type="HSeparator" parent="VBox/TabContainer/WorkTab"]
-layout_mode = 2
-
-[node name="ActiveLabel" type="Label" parent="VBox/TabContainer/WorkTab"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
-theme_override_font_sizes/font_size = 14
-text = "⚡ 进行中"
-
-[node name="ActiveScroll" type="ScrollContainer" parent="VBox/TabContainer/WorkTab"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="ActiveList" type="VBoxContainer" parent="VBox/TabContainer/WorkTab/ActiveScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 4
-
-[node name="PlaceholderLabel2" type="Label" parent="VBox/TabContainer/WorkTab/ActiveScroll/ActiveList"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
-text = "当前无进行中的工作"
+[connection signal="pressed" from="PanelFrame/VBox/TitleRow/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="PanelFrame/VBox/ContentScroll/ContentArea/ActiveSection/ActiveHeader/CollectAllBtn" to="." method="_on_collect_all_button_pressed"]

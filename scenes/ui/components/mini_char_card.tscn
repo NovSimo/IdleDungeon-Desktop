@@ -1,0 +1,60 @@
+[gd_scene load_steps=2 format=3 uid="uid://bmini_char_card"]
+
+[ext_resource type="Script" path="res://scripts/ui/components/mini_char_card.gd" id="1_mcc"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.08, 0.08, 0.12, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.2, 0.3, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="MiniCharCard" type="PanelContainer"]
+custom_minimum_size = Vector2(80, 90)
+layout_mode = 0
+tooltip_text = "点击查看详情"
+script = ExtResource("1_mcc")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = -6.0
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="EmojiLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "🧙"
+horizontal_alignment = 1
+
+[node name="NameLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "角色名"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "空闲"
+horizontal_alignment = 1
+
+[node name="BonusLabel" type="Label" parent="VBox"]
+layout_mode = 2
+visible = false
+theme_override_font_sizes/font_size = 9
+text = "+10%"
+horizontal_alignment = 1
+
+[connection signal="gui_input" from="." to="." method="_on_gui_input"]

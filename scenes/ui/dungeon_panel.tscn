@@ -1,173 +1,187 @@
-[gd_scene load_steps=3 format=3 uid="uid://bdungeon_panel"]
+[gd_scene load_steps=3 format=3 uid="bdungeon_panel_v2"]
 
 [ext_resource type="Script" path="res://scripts/ui/dungeon_panel.gd" id="1_dp"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_config"]
-bg_color = Color(0.145098, 0.145098, 0.180392, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.08, 0.12, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
 border_color = Color(1, 0.643137, 0, 0.5)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="DungeonPanel" type="Control"]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = Control.PRESET_FULL_RECT
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_dp")
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="PanelFrame" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = Control.PRESET_FULL_RECT
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="PanelFrame"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 6
-
-# ============================================================
-# 标题栏
-# ============================================================
-[node name="TitleBar" type="HBoxContainer" parent="VBox"]
-layout_mode = 2
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
 theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="VBox/TitleBar"]
+# --- 标题栏 ---
+[node name="TitleRow" type="HBoxContainer" parent="PanelFrame/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="PanelFrame/VBox/TitleRow"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "🏰 地牢"
+text = "🏰 地牢探险"
 
-[node name="ConnectionIndicator" type="Label" parent="VBox/TitleBar"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "●"
-
-[node name="HSpacer" type="Control" parent="VBox/TitleBar"]
+[node name="HSpacer" type="Control" parent="PanelFrame/VBox/TitleRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-# ============================================================
-# 地牢列表
-# ============================================================
-[node name="HSeparator" type="HSeparator" parent="VBox"]
+[node name="CloseButton" type="Button" parent="PanelFrame/VBox/TitleRow"]
+custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
+text = "✕"
 
-[node name="DungeonScroll" type="ScrollContainer" parent="VBox"]
+# --- 内容区 ---
+[node name="ContentScroll" type="ScrollContainer" parent="PanelFrame/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="DungeonList" type="VBoxContainer" parent="VBox/DungeonScroll"]
+[node name="ContentArea" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
-[node name="PlaceholderLabel" type="Label" parent="VBox/DungeonScroll/DungeonList"]
+# 地牢列表区
+[node name="DungeonListSection" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
-text = "暂无地牢"
+theme_override_constants/separation = 6
 
-# ============================================================
-# 探险配置面板
-# ============================================================
-[node name="ExploreConfigPanel" type="PanelContainer" parent="VBox"]
+[node name="DungeonListLabel" type="Label" parent="PanelFrame/VBox/ContentScroll/ContentArea/DungeonListSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.643137, 0, 1)
+theme_override_font_sizes/font_size = 15
+text = "🗺️ 可探索地牢"
+
+[node name="DungeonList" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea/DungeonListSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+# 分隔线
+[node name="Sep" type="HSeparator" parent="PanelFrame/VBox/ContentScroll/ContentArea"]
+layout_mode = 2
+
+# 探险配置区（选中地牢后显示）
+[node name="ExploreConfigPanel" type="PanelContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea"]
 visible = false
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_config")
 
-[node name="VBox" type="VBoxContainer" parent="VBox/ExploreConfigPanel"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_config" bg_color = Color(0.1, 0.08, 0.06, 1) border_width_left = 1 border_width_top = 1 border_width_right = 1 border_width_bottom = 1 border_color = Color(1, 0.643137, 0, 0.3) corner_radius_top_left = 4 corner_radius_top_right = 4 corner_radius_bottom_right = 4 corner_radius_bottom_left = 4]
+
+# (注意: StyleBoxFlat_config 在这里作为内联资源)
+
+[node name="ConfigVBox" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea/ExploreConfigPanel"]
 layout_mode = 2
-offset_left = 8.0
+offset_left = 10.0
 offset_top = 8.0
-offset_right = -8.0
+offset_right = -10.0
 offset_bottom = -8.0
 theme_override_constants/separation = 8
 
-[node name="SelectedDungeonLabel" type="Label" parent="VBox/ExploreConfigPanel/VBox"]
+[node name="SelectedDungeonLabel" type="Label" parent="PanelFrame/VBox/ContentScroll/ContentArea/ExploreConfigPanel/ConfigVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.643137, 0, 1)
 theme_override_font_sizes/font_size = 16
-text = "🏰 哥布林洞穴"
+text = "🏰 选择一个地牢"
 
-[node name="DungeonInfoLabel" type="Label" parent="VBox/ExploreConfigPanel/VBox"]
+[node name="DungeonInfoLabel" type="Label" parent="PanelFrame/VBox/ContentScroll/ContentArea/ExploreConfigPanel/ConfigVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
 theme_override_font_sizes/font_size = 12
-text = "层数: 1-5  |  推荐等级: Lv.3"
+text = ""
 
-[node name="CharacterSelectLabel" type="Label" parent="VBox/ExploreConfigPanel/VBox"]
+[node name="CharSelectLabel" type="Label" parent="PanelFrame/VBox/ContentScroll/ContentArea/ExploreConfigPanel/ConfigVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
 theme_override_font_sizes/font_size = 12
-text = "选择角色:"
+text = "选择探险角色:"
 
-[node name="CharacterSelect" type="OptionButton" parent="VBox/ExploreConfigPanel/VBox"]
+[node name="CharacterSelect" type="OptionButton" parent="PanelFrame/VBox/ContentScroll/ContentArea/ExploreConfigPanel/ConfigVBox"]
 layout_mode = 2
-text = "战士·李四"
-item_count = 1
-selected = 0
+custom_minimum_size = Vector2(0, 34)
+text = "选择角色..."
 
-[node name="StartButton" type="Button" parent="VBox/ExploreConfigPanel/VBox"]
+[node name="StartButton" type="Button" parent="PanelFrame/VBox/ContentScroll/ContentArea/ExploreConfigPanel/ConfigVBox"]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.643137, 0, 1)
 theme_override_font_sizes/font_size = 16
 text = "⚔️ 开始探险"
 
-# ============================================================
-# 进行中的探险
-# ============================================================
-[node name="ActivePanel" type="PanelContainer" parent="VBox"]
+# --- 进行中探险区 ---
+[node name="ActivePanel" type="PanelContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea"]
 visible = false
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_config")
 
-[node name="VBox" type="VBoxContainer" parent="VBox/ActivePanel"]
+[node name="ActiveVBox" type="VBoxContainer" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActivePanel"]
 layout_mode = 2
-offset_left = 8.0
+offset_left = 10.0
 offset_top = 8.0
-offset_right = -8.0
+offset_right = -10.0
 offset_bottom = -8.0
 theme_override_constants/separation = 6
 
-[node name="ActiveDungeonLabel" type="Label" parent="VBox/ActivePanel/VBox"]
+[node name="ActiveDungeonLabel" type="Label" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActivePanel/ActiveVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.643137, 0, 1)
 theme_override_font_sizes/font_size = 16
-text = "🏰 哥布林洞穴"
+text = "🏰 --"
 
-[node name="ActiveCharacterLabel" type="Label" parent="VBox/ActivePanel/VBox"]
+[node name="ActiveCharacterLabel" type="Label" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActivePanel/ActiveVBox]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
 theme_override_font_sizes/font_size = 12
-text = "🧙 战士·李四 探险中..."
+text = ""
 
-[node name="ActiveFloorLabel" type="Label" parent="VBox/ActivePanel/VBox"]
+[node name="ActiveFloorLabel" type="Label" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActivePanel/ActiveVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.643137, 0, 1)
 theme_override_font_sizes/font_size = 14
-text = "第 3/5 层"
+text = ""
 
-[node name="ActiveProgress" type="ProgressBar" parent="VBox/ActivePanel/VBox"]
+[node name="ActiveProgress" type="ProgressBar" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActivePanel/ActiveVBox"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 max_value = 100.0
 value = 60.0
 show_percentage = false
 
-[node name="ClaimButton" type="Button" parent="VBox/ActivePanel/VBox"]
+[node name="ClaimButton" type="Button" parent="PanelFrame/VBox/ContentScroll/ContentArea/ActivePanel/ActiveVBox"]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
 theme_override_font_sizes/font_size = 14
-text = "剩余 30s"
+text = "领取奖励"
 
-[connection signal="pressed" from="VBox/ExploreConfigPanel/VBox/StartButton" to="." method="_on_start_button_pressed"]
-[connection signal="pressed" from="VBox/ActivePanel/VBox/ClaimButton" to="." method="_on_claim_button_pressed"]
+[connection signal="pressed" from="PanelFrame/VBox/TitleRow/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="PanelFrame/VBox/ContentScroll/ContentArea/ExploreConfigPanel/ConfigVBox/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="PanelFrame/VBox/ContentScroll/ContentArea/ActivePanel/ActiveVBox/ClaimButton" to="." method="_on_claim_button_pressed"]

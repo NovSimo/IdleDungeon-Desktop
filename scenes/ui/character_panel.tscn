@@ -1,181 +1,170 @@
-[gd_scene load_steps=3 format=3 uid="uid://bcharacter_panel"]
+[gd_scene load_steps=3 format=3 uid="uid://bcharacter_panel_v2"]
 
 [ext_resource type="Script" path="res://scripts/ui/character_panel.gd" id="1_cp"]
-[ext_resource type="PackedScene" uid="uid://bwork_slot_indicator" path="res://scenes/ui/components/work_slot_indicator.tscn" id="2_wsi"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_detail"]
-bg_color = Color(0.145098, 0.145098, 0.180392, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.290196, 0.290196, 0.431373, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.1, 0.1, 0.15, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.29, 0.43, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="CharacterPanel" type="Control"]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = Control.PRESET_FULL_RECT
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_cp")
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="PanelFrame" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = Control.PRESET_FULL_RECT
+offset_left = 40.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = -40.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="PanelFrame"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 6
-
-# ============================================================
-# 标题栏
-# ============================================================
-[node name="TitleBar" type="HBoxContainer" parent="VBox"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="TitleLabel" type="Label" parent="VBox/TitleBar"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "🧙 角色"
-
-[node name="ConnectionIndicator" type="Label" parent="VBox/TitleBar"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "●"
-
-[node name="HSpacer" type="Control" parent="VBox/TitleBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CharacterCountLabel" type="Label" parent="VBox/TitleBar"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
-theme_override_font_sizes/font_size = 12
-text = "4/12"
-
-# ============================================================
-# 工作槽位指示器
-# ============================================================
-[node name="WorkSlotIndicator" parent="VBox" instance=ExtResource("2_wsi")]
-layout_mode = 2
-
-# ============================================================
-# 角色列表
-# ============================================================
-[node name="HSeparator" type="HSeparator" parent="VBox"]
-layout_mode = 2
-
-[node name="ScrollContainer" type="ScrollContainer" parent="VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="CharacterList" type="VBoxContainer" parent="VBox/ScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 6
-
-# ============================================================
-# 角色详情面板
-# ============================================================
-[node name="DetailPanel" type="PanelContainer" parent="VBox"]
-visible = false
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_detail")
-
-[node name="VBox" type="VBoxContainer" parent="VBox/DetailPanel"]
-layout_mode = 2
-offset_left = 8.0
-offset_top = 6.0
-offset_right = -8.0
-offset_bottom = -6.0
-theme_override_constants/separation = 4
-
-[node name="NameRow" type="HBoxContainer" parent="VBox/DetailPanel/VBox"]
-layout_mode = 2
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
 theme_override_constants/separation = 8
 
-[node name="DetailNameLabel" type="Label" parent="VBox/DetailPanel/VBox/NameRow"]
+# --- 标题行: 名字 + 职业 + 关闭按钮 ---
+[node name="TitleRow" type="HBoxContainer" parent="PanelFrame/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+
+[node name="EmojiLabel" type="Label" parent="PanelFrame/VBox/TitleRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "🧙"
+
+[node name="NameLabel" type="Label" parent="PanelFrame/VBox/TitleRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
 text = "角色名"
 
-[node name="DetailClassLabel" type="Label" parent="VBox/DetailPanel/VBox/NameRow"]
+[node name="ClassLabel" type="Label" parent="PanelFrame/VBox/TitleRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
+theme_override_font_sizes/font_size = 16
+text = "法师"
+
+[node name="LevelLabel" type="Label" parent="PanelFrame/VBox/TitleRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
 theme_override_font_sizes/font_size = 14
-text = "战士"
+text = "Lv.1"
 
-[node name="HSpacer" type="Control" parent="VBox/DetailPanel/VBox/NameRow"]
+[node name="HSpacer" type="Control" parent="PanelFrame/VBox/TitleRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SkinRow" type="HBoxContainer" parent="VBox/DetailPanel/VBox"]
+[node name="CloseButton" type="Button" parent="PanelFrame/VBox/TitleRow"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "✕"
+
+# 分隔线
+[node name="Sep1" type="HSeparator" parent="PanelFrame/VBox"]
+layout_mode = 2
+
+# --- 属性信息区 ---
+[node name="InfoArea" type="VBoxContainer" parent="PanelFrame/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+# 疲劳值行
+[node name="FatigueRow" type="HBoxContainer" parent="PanelFrame/VBox/InfoArea"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SkinLabel" type="Label" parent="VBox/DetailPanel/VBox/SkinRow"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
-theme_override_font_sizes/font_size = 12
-text = "皮肤:"
-
-[node name="SkinButton" type="Button" parent="VBox/DetailPanel/VBox/SkinRow"]
+[node name="FatigueLabel" type="Label" parent="PanelFrame/VBox/InfoArea/FatigueRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.290196, 0.870588, 0.501961, 1)
-theme_override_font_sizes/font_size = 12
-text = "默认 ▼"
+theme_override_font_sizes/font_size = 13
+text = "💤 疲劳: 0%"
 
-[node name="FatigueRow" type="HBoxContainer" parent="VBox/DetailPanel/VBox"]
+[node name="FatigueBar" type="ProgressBar" parent="PanelFrame/VBox/InfoArea/FatigueRow"]
+custom_minimum_size = Vector2(160, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+# 皮肤行
+[node name="SkinRow" type="HBoxContainer" parent="PanelFrame/VBox/InfoArea"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="FatigueLabel" type="Label" parent="VBox/DetailPanel/VBox/FatigueRow"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.290196, 0.870588, 0.501961, 1)
-theme_override_font_sizes/font_size = 12
-text = "疲劳: 30%"
-
-[node name="HSpacer2" type="Control" parent="VBox/DetailPanel/VBox/FatigueRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="SkillLabel" type="Label" parent="VBox/DetailPanel/VBox"]
+[node name="SkinLabel" type="Label" parent="PanelFrame/VBox/InfoArea/SkinRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
 theme_override_font_sizes/font_size = 12
-text = "技能: 🌿Lv.3 🪓Lv.1 ⛏️Lv.1 🎣Lv.1"
+text = "👗 皮肤:"
 
-[node name="ButtonRow" type="HBoxContainer" parent="VBox/DetailPanel/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="HSpacer3" type="Control" parent="VBox/DetailPanel/VBox/ButtonRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="OperationSelect" type="OptionButton" parent="VBox/DetailPanel/VBox/ButtonRow"]
-custom_minimum_size = Vector2(90, 32)
-layout_mode = 2
-theme_override_font_sizes/font_size = 12
-
-[node name="WorkButton" type="Button" parent="VBox/DetailPanel/VBox/ButtonRow"]
-custom_minimum_size = Vector2(100, 32)
+[node name="SkinButton" type="Button" parent="PanelFrame/VBox/InfoArea/SkinRow"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.290196, 0.870588, 0.501961, 1)
-theme_override_font_sizes/font_size = 14
-text = "工作"
+theme_override_font_sizes/font_size = 12
+text = "默认"
 
-[node name="DungeonButton" type="Button" parent="VBox/DetailPanel/VBox/ButtonRow"]
-custom_minimum_size = Vector2(100, 32)
+# 技能标签
+[node name="SkillLabel" type="Label" parent="PanelFrame/VBox/InfoArea"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.533333, 0.533333, 0.533333, 1)
+theme_override_font_sizes/font_size = 12
+text = "🎯 技能: --"
+
+# 分隔线
+[node name="Sep2" type="HSeparator" parent="PanelFrame/VBox"]
+layout_mode = 2
+
+# --- 操作区域 ---
+[node name="ActionArea" type="VBoxContainer" parent="PanelFrame/VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+# 操作选择（空闲时显示）
+[node name="OperationSelect" type="OptionButton" parent="PanelFrame/VBox/ActionArea"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 36)
+theme_override_font_sizes/font_size = 13
+
+# 按钮行
+[node name="ButtonRow" type="HBoxContainer" parent="PanelFrame/VBox/ActionArea"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="WorkButton" type="Button" parent="PanelFrame/VBox/ActionArea/ButtonRow"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.870588, 0.501961, 1)
+theme_override_font_sizes/font_size = 15
+text = "▶ 开始工作"
+
+[node name="DungeonButton" type="Button" parent="PanelFrame/VBox/ActionArea/ButtonRow"]
+custom_minimum_size = Vector2(120, 40)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.643137, 0, 1)
-theme_override_font_sizes/font_size = 14
-text = "探险"
+theme_override_font_sizes/font_size = 15
+text = "⚔️ 去探险"
+
+[connection signal="pressed" from="PanelFrame/VBox/TitleRow/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="PanelFrame/VBox/ActionArea/WorkButton" to="." method="_on_detail_work_button_pressed"]
+[connection signal="pressed" from="PanelFrame/VBox/ActionArea/DungeonButton" to="." method="_on_dungeon_button_pressed"]

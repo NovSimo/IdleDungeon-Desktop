@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>悬浮地牢 — 主界面设计稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0d0d1a;
+  --bg-card: #1a1a2e;
+  --bg-secondary: #252540;
+  --bg-hover: #2a2a50;
+  --border: #4a4a6e;
+  --border-bright: #6b6b9e;
+  --gold: #ffd700;
+  --gold-dim: #b8960f;
+  --green: #4ade80;
+  --green-dark: #2d7a50;
+  --orange: #ffa500;
+  --orange-dark: #7a4200;
+  --red: #ff6b6b;
+  --purple: #7f77dd;
+  --text-primary: #e0e0e0;
+  --text-secondary: #888888;
+  --text-dim: #555555;
+  --quality-common: #ffffff;
+  --quality-fine: #22c55e;
+  --quality-rare: #3b82f6;
+  --quality-epic: #f59e0b;
+  --quality-legendary: #ef4444;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #070710;
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  gap: 24px;
+}
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+  max-width: 600px;
+}
+.page-header h1 {
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 28px;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.page-header p {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ===== SCREEN LABELS ===== */
+.screen-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* ===== WINDOW FRAME ===== */
+.window-frame {
+  width: 480px;
+  background: var(--bg-primary);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(127, 119, 221, 0.15), 0 8px 32px rgba(0,0,0,0.5);
+  position: relative;
+}
+.window-frame::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--purple), var(--gold), var(--orange));
+}
+
+/* ===== TOP BAR ===== */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  height: 52px;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connection-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+.connection-dot.offline { background: var(--red); box-shadow: 0 0 6px var(--red); animation: none; }
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 6px var(--green); }
+  50% { box-shadow: 0 0 12px var(--green), 0 0 20px rgba(74,222,128,0.3); }
+}
+
+.gold-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--gold-dim);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.gold-icon {
+  font-size: 16px;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.collect-btn {
+  background: var(--gold-dim);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--gold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+.collect-btn:hover { background: var(--gold); color: #000; transform: scale(1.05); }
+.collect-btn .badge {
+  background: var(--red);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 5px;
+  font-size: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.mode-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mode-btn:hover { border-color: var(--border-bright); color: var(--text-primary); }
+
+/* ===== TAB BAR ===== */
+.tab-bar {
+  display: flex;
+  background: var(--bg-card);
+  border-bottom: 2px solid var(--border);
+  height: 44px;
+}
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: transparent;
+  transition: background 0.2s;
+}
+.tab-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.tab-btn.active { color: var(--gold); background: rgba(255,215,0,0.05); }
+.tab-btn.active::after { background: var(--gold); }
+.tab-btn .tab-icon { font-size: 18px; }
+.tab-btn .tab-label { font-size: 11px; font-weight: 500; }
+
+/* ===== PANEL AREA ===== */
+.panel-area {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 560px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.panel-area::-webkit-scrollbar { width: 4px; }
+.panel-area::-webkit-scrollbar-track { background: transparent; }
+.panel-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ===== SECTION TITLE ===== */
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 0 2px;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-title .badge {
+  background: var(--purple);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+/* ===== CHARACTER CARD ===== */
+.character-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.character-card:hover { border-color: var(--border-bright); background: var(--bg-secondary); }
+.character-card.selected { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,215,0,0.2); }
+.character-card.working { border-left: 3px solid var(--green); }
+.character-card.idle { border-left: 3px solid var(--text-dim); }
+.character-card.exploring { border-left: 3px solid var(--orange); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  position: relative;
+}
+.avatar.warrior { background: linear-gradient(135deg, #4a2a2a, #6b3a3a); }
+.avatar.mage { background: linear-gradient(135deg, #2a2a6b, #3a3a8b); }
+.avatar.thief { background: linear-gradient(135deg, #2a4a2a, #3a6a3a); }
+.avatar.healer { background: linear-gradient(135deg, #2a4a4a, #3a7a7a); }
+.avatar.merchant { background: linear-gradient(135deg, #4a4a2a, #7a7a3a); }
+.avatar.miner { background: linear-gradient(135deg, #3a3a3a, #5a5a5a); }
+
+.rarity-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
+}
+.rarity-dot.common { background: var(--quality-common); }
+.rarity-dot.fine { background: var(--quality-fine); }
+.rarity-dot.rare { background: var(--quality-rare); }
+.rarity-dot.legendary { background: var(--quality-legendary); }
+
+.card-info { flex: 1; min-width: 0; }
+.card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-class {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.card-level {
+  font-size: 11px;
+  color: var(--purple);
+  font-weight: 500;
+}
+.skin-tag {
+  font-size: 9px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 6px;
+}
+.card-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.card-btn.work { background: var(--green-dark); border-color: var(--green); color: var(--green); }
+.card-btn.work:hover { background: var(--green); color: #000; }
+.card-btn.explore { background: var(--orange-dark); border-color: var(--orange); color: var(--orange); }
+.card-btn.explore:hover { background: var(--orange); color: #000; }
+.card-btn.stop { background: #4a2a2a; border-color: var(--red); color: var(--red); }
+.card-btn.stop:hover { background: var(--red); color: #fff; }
+
+/* ===== STAT BARS ===== */
+.stat-bars { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+.stat-row { display: flex; align-items: center; gap: 6px; }
+.stat-icon { font-size: 12px; width: 14px; text-align: center; }
+.stat-label { font-size: 11px; color: var(--text-secondary); width: 28px; }
+.stat-bar-bg {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-primary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.stat-bar-fill.hp { background: var(--red); }
+.stat-bar-fill.fatigue { background: var(--orange); }
+.stat-bar-fill.work { background: var(--green); }
+.stat-value { font-size: 10px; color: var(--text-secondary); width: 30px; text-align: right; }
+
+/* ===== WORK SLOT INDICATORS ===== */
+.work-slots {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.work-slots .section-title { margin-bottom: 8px; }
+.slots-row { display: flex; gap: 8px; }
+.work-slot {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
+}
+.work-slot.locked {
+  opacity: 0.5;
+  background: transparent;
+  border-style: dashed;
+}
+.work-slot.occupied { border-color: var(--green); }
+.work-slot .slot-icon { font-size: 20px; }
+.work-slot .slot-name { font-size: 11px; color: var(--text-secondary); }
+.work-slot .slot-progress { font-size: 10px; color: var(--green); }
+.work-slot .lock-icon { font-size: 16px; color: var(--text-dim); }
+.slot-lock-info {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* ===== FACILITY CARD ===== */
+.facility-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.facility-card:hover { border-color: var(--border-bright); }
+.facility-card.locked { opacity: 0.6; }
+.facility-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.facility-left { display: flex; align-items: center; gap: 8px; }
+.facility-icon { font-size: 20px; }
+.facility-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.facility-level { font-size: 11px; color: var(--purple); }
+.facility-desc { font-size: 11px; color: var(--text-secondary); margin-left: 28px; }
+.facility-btns { display: flex; gap: 6px; margin-top: 6px; }
+.facility-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.facility-btn.upgrade { background: var(--green-dark); border-color: var(--green); color: var(--green); }
+.facility-btn.upgrade:hover { background: var(--green); color: #000; }
+.facility-btn.locked { background: transparent; border-color: var(--border); color: var(--text-dim); cursor: not-allowed; }
+.facility-btn.build { background: var(--orange-dark); border-color: var(--orange); color: var(--orange); }
+.facility-btn.build:hover { background: var(--orange); color: #000; }
+
+/* ===== DUNGEON CARD ===== */
+.dungeon-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.dungeon-card:hover { border-color: var(--orange); box-shadow: 0 0 12px rgba(255,165,0,0.15); }
+.dungeon-card.locked { opacity: 0.5; cursor: not-allowed; }
+.dungeon-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.dungeon-icon { font-size: 28px; }
+.dungeon-info { flex: 1; }
+.dungeon-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.dungeon-level { font-size: 11px; color: var(--orange); margin-top: 2px; }
+.dungeon-reward { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+.dungeon-status {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+.dungeon-status.available { background: var(--green-dark); color: var(--green); }
+.dungeon-status.locked { background: var(--bg-secondary); color: var(--text-dim); }
+.dungeon-status.cleared { background: var(--purple); color: #fff; }
+
+/* ===== WORK QUEUE ===== */
+.work-queue {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(74,74,110,0.3);
+}
+.queue-item:last-child { border-bottom: none; }
+.queue-num { font-size: 11px; color: var(--text-dim); width: 16px; text-align: center; }
+.queue-avatar { font-size: 16px; }
+.queue-info { flex: 1; }
+.queue-op { font-size: 12px; color: var(--text-primary); }
+.queue-detail { font-size: 10px; color: var(--text-secondary); }
+.queue-progress { width: 60px; }
+.queue-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+}
+.queue-btn:hover { border-color: var(--red); color: var(--red); }
+.queue-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.2s;
+}
+.queue-add:hover { border-color: var(--green); color: var(--green); }
+
+/* ===== MINI MAP ===== */
+.mini-map {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+.mini-map-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.mini-map-title { font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+.floor-indicator { font-size: 11px; color: var(--orange); background: var(--orange-dark); padding: 2px 8px; border-radius: 10px; }
+.floor-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.floor-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  position: relative;
+}
+.floor-cell.empty { background: var(--bg-secondary); color: var(--text-dim); }
+.floor-cell.normal { background: var(--green-dark); border-color: var(--green); color: var(--green); }
+.floor-cell.elite { background: var(--orange-dark); border-color: var(--orange); color: var(--orange); }
+.floor-cell.boss { background: var(--red); color: #fff; }
+.floor-cell.current { box-shadow: 0 0 8px var(--orange); border-color: var(--gold) !important; }
+.floor-cell.locked { opacity: 0.3; cursor: not-allowed; }
+.explore-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--orange);
+  background: var(--orange-dark);
+  color: var(--orange);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.explore-btn:hover { background: var(--orange); color: #000; transform: scale(1.02); }
+.explore-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ===== REGION SELECTOR ===== */
+.region-selector {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.region-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.region-tab {
+  flex: 1;
+  padding: 5px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.2s;
+}
+.region-tab:hover { border-color: var(--border-bright); color: var(--text-primary); }
+.region-tab.active { background: var(--bg-secondary); border-color: var(--gold); color: var(--gold); }
+.region-tab .rt-icon { font-size: 18px; }
+.region-tab .rt-name { font-size: 10px; }
+.region-list { display: flex; flex-direction: column; gap: 4px; max-height: 140px; overflow-y: auto; }
+.region-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.region-item:hover { border-color: var(--border-bright); }
+.region-item.selected { border-color: var(--gold); background: rgba(255,215,0,0.05); }
+.region-item.locked { opacity: 0.5; cursor: not-allowed; }
+.region-level { font-size: 10px; color: var(--text-dim); width: 16px; }
+.region-name { font-size: 12px; flex: 1; }
+.region-quality { font-size: 10px; padding: 1px 6px; border-radius: 4px; }
+.region-quality.common { background: rgba(255,255,255,0.1); color: var(--quality-common); }
+.region-quality.fine { background: rgba(34,197,94,0.15); color: var(--quality-fine); }
+.region-quality.rare { background: rgba(59,130,246,0.15); color: var(--quality-rare); }
+.region-quality.legendary { background: rgba(239,68,68,0.15); color: var(--quality-legendary); }
+
+/* ===== CHARACTER DETAIL PANEL (Floating) ===== */
+.floating-panel {
+  background: var(--bg-card);
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.1);
+  position: relative;
+  margin-top: 12px;
+}
+.floating-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.floating-panel-title { font-size: 14px; font-weight: 700; color: var(--gold); }
+.close-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+.close-btn:hover { border-color: var(--red); color: var(--red); }
+
+.equip-section { margin-top: 10px; }
+.equip-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+.equip-slot {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  gap: 2px;
+}
+.equip-slot:hover { border-color: var(--border-bright); }
+.equip-slot.has-item { border-color: var(--green); }
+.equip-slot .slot-icon { font-size: 22px; }
+.equip-slot .slot-label { font-size: 9px; color: var(--text-dim); }
+.equip-slot .item-name { font-size: 9px; color: var(--text-secondary); text-align: center; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
+.skin-switcher { margin-top: 10px; }
+.skin-list { display: flex; gap: 6px; flex-wrap: wrap; }
+.skin-item {
+  padding: 4px 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.skin-item:hover { border-color: var(--border-bright); color: var(--text-primary); }
+.skin-item.active { border-color: var(--purple); background: rgba(127,119,221,0.1); color: var(--purple); }
+
+/* ===== MODAL OVERLAY ===== */
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.modal-box {
+  background: var(--bg-card);
+  border: 2px solid var(--gold);
+  border-radius: 10px;
+  padding: 16px;
+  width: 90%;
+  text-align: center;
+}
+.modal-box h4 { font-size: 14px; color: var(--gold); margin-bottom: 8px; }
+.modal-box p { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+.modal-actions { display: flex; gap: 8px; justify-content: center; }
+.modal-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid;
+  transition: all 0.2s;
+}
+.modal-btn.confirm { background: var(--green-dark); border-color: var(--green); color: var(--green); }
+.modal-btn.confirm:hover { background: var(--green); color: #000; }
+.modal-btn.cancel { background: transparent; border-color: var(--border); color: var(--text-secondary); }
+.modal-btn.cancel:hover { border-color: var(--border-bright); color: var(--text-primary); }
+
+/* ===== TOAST NOTIFICATION ===== */
+.toast {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--green);
+  white-space: nowrap;
+  animation: toast-in 0.3s ease, toast-out 0.3s ease 2s forwards;
+  z-index: 20;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}
+
+/* ===== SCREENS ===== */
+.screen { display: none; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ===== MORE PANEL ===== */
+.more-list { display: flex; flex-direction: column; gap: 8px; }
+.more-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.more-item:hover { border-color: var(--border-bright); }
+.more-icon { font-size: 24px; }
+.more-info { flex: 1; }
+.more-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.more-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.more-arrow { color: var(--text-dim); font-size: 14px; }
+
+/* ===== REWARD NOTIFICATION ===== */
+.reward-toast {
+  position: absolute;
+  top: 60px;
+  right: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 10px 14px;
+  z-index: 30;
+  animation: toast-in 0.3s ease;
+  min-width: 140px;
+}
+.reward-toast h5 { font-size: 12px; color: var(--gold); margin-bottom: 6px; }
+.reward-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-primary); margin-bottom: 3px; }
+.reward-item .qty { color: var(--green); font-weight: 600; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 520px) {
+  .window-frame { width: 100%; border-radius: 0; }
+  body { padding: 0; }
+  .page-header { padding: 16px; }
+}
+
+/* ===== EXPLORE MODE ===== */
+.explore-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.char-selector {
+  flex: 1;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.explore-header .go-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--orange);
+  background: var(--orange-dark);
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.explore-header .go-btn:hover { background: var(--orange); color: #000; }
+
+/* ===== IDLE INDICATOR ===== */
+.idle-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  background: rgba(74,222,128,0.1);
+  color: var(--green);
+}
+.idle-badge .idle-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: blink 1.5s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ===== REST BONUS ===== */
+.rest-bonus {
+  font-size: 10px;
+  color: var(--purple);
+  margin-left: 4px;
+}
+
+/* ===== DESCRIPTION ===== */
+.desc-section {
+  margin-top: 48px;
+  width: 480px;
+  max-width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.desc-section h3 { font-size: 16px; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.desc-section p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 8px; }
+.color-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>悬浮地牢 · Idle Dungeon</h1>
+  <p>桌面模拟经营 × 地牢探险挂机 — 主界面设计稿</p>
+</div>
+
+<!-- ===== SCREEN 1: CHARACTER TAB ===== -->
+<div class="screen-label">▶ Tab 1：角色面板</div>
+<div class="window-frame">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="connection-dot" title="已连接"></div>
+      <div class="gold-display">
+        <span class="gold-icon">💰</span>
+        <span>12,450</span>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <button class="collect-btn" onclick="void(0)">
+        📬 收取
+        <span class="badge">3</span>
+      </button>
+      <button class="mode-btn">完整</button>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab(0,this)">
+      <span class="tab-icon">🧙</span>
+      <span class="tab-label">角色</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab(1,this)">
+      <span class="tab-icon">🏭</span>
+      <span class="tab-label">经营</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab(2,this)">
+      <span class="tab-icon">🏰</span>
+      <span class="tab-label">地牢</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab(3,this)">
+      <span class="tab-icon">⋯</span>
+      <span class="tab-label">更多</span>
+    </button>
+  </div>
+
+  <!-- Panel Area -->
+  <div class="panel-area" id="panel-character">
+    <!-- Work Slots -->
+    <div class="work-slots">
+      <div class="section-title">工作槽位 <span class="badge">2/3</span></div>
+      <div class="slots-row">
+        <div class="work-slot occupied">
+          <span class="slot-icon">🧙</span>
+          <span class="slot-name">铁锤</span>
+          <span class="slot-progress">🌿 68%</span>
+        </div>
+        <div class="work-slot occupied">
+          <span class="slot-icon">🧝</span>
+          <span class="slot-name">月华</span>
+          <span class="slot-progress">🔥 35%</span>
+        </div>
+        <div class="work-slot locked">
+          <span class="lock-icon">🔒</span>
+          <span class="slot-lock-info">酒馆 Lv.1 解锁</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Character List -->
+    <div class="section-title">角色列表 <span class="badge">3</span></div>
+
+    <!-- Character 1: Working -->
+    <div class="character-card working selected">
+      <div class="card-header">
+        <div class="avatar warrior">
+          ⚔️
+          <div class="rarity-dot rare"></div>
+        </div>
+        <div class="card-info">
+          <div class="card-name">铁锤 <span class="skin-tag">Default</span></div>
+          <div class="card-class">战士 · 稀有</div>
+          <div class="card-level">Lv.5</div>
+        </div>
+        <div class="card-actions">
+          <button class="card-btn stop" onclick="event.stopPropagation()">停止</button>
+          <button class="card-btn explore" onclick="event.stopPropagation()">探险</button>
+        </div>
+      </div>
+      <div class="stat-bars">
+        <div class="stat-row">
+          <span class="stat-icon">🩸</span>
+          <span class="stat-label">HP</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill hp" style="width:80%"></div></div>
+          <span class="stat-value">80/100</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">⚡</span>
+          <span class="stat-label">疲劳</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill fatigue" style="width:35%"></div></div>
+          <span class="stat-value">35%</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">⏱</span>
+          <span class="stat-label">进度</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill work" style="width:68%"></div></div>
+          <span class="stat-value">68%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Character 2: Working -->
+    <div class="character-card working">
+      <div class="card-header">
+        <div class="avatar mage">
+          🔮
+          <div class="rarity-dot fine"></div>
+        </div>
+        <div class="card-info">
+          <div class="card-name">月华 <span class="skin-tag">Lunar</span></div>
+          <div class="card-class">法师 · 优良</div>
+          <div class="card-level">Lv.3</div>
+        </div>
+        <div class="card-actions">
+          <button class="card-btn stop" onclick="event.stopPropagation()">停止</button>
+          <button class="card-btn explore" onclick="event.stopPropagation()">探险</button>
+        </div>
+      </div>
+      <div class="stat-bars">
+        <div class="stat-row">
+          <span class="stat-icon">🩸</span>
+          <span class="stat-label">HP</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill hp" style="width:100%"></div></div>
+          <span class="stat-value">100/100</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">⚡</span>
+          <span class="stat-label">疲劳</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill fatigue" style="width:20%"></div></div>
+          <span class="stat-value">20%</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">⏱</span>
+          <span class="stat-label">进度</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill work" style="width:35%"></div></div>
+          <span class="stat-value">35%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Character 3: Idle with rest bonus -->
+    <div class="character-card idle">
+      <div class="card-header">
+        <div class="avatar thief">
+          🗡️
+          <div class="rarity-dot common"></div>
+        </div>
+        <div class="card-info">
+          <div class="card-name">夜影</div>
+          <div class="card-class">盗贼 · 普通</div>
+          <div class="card-level">Lv.2</div>
+        </div>
+        <div class="card-actions">
+          <button class="card-btn work" onclick="event.stopPropagation()">工作</button>
+          <button class="card-btn explore" onclick="event.stopPropagation()">探险</button>
+        </div>
+      </div>
+      <div class="stat-bars">
+        <div class="stat-row">
+          <span class="stat-icon">🩸</span>
+          <span class="stat-label">HP</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill hp" style="width:60%"></div></div>
+          <span class="stat-value">60/100</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">⚡</span>
+          <span class="stat-label">疲劳</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill fatigue" style="width:0%"></div></div>
+          <span class="stat-value">0%</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">💤</span>
+          <span class="stat-label">状态</span>
+          <span class="idle-badge"><span class="idle-dot"></span>空闲 45min</span>
+          <span class="rest-bonus">+10%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 2: MANAGEMENT TAB ===== -->
+<div class="screen-label" style="margin-top:32px">▶ Tab 2：经营管理面板</div>
+<div class="window-frame">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="connection-dot"></div>
+      <div class="gold-display"><span class="gold-icon">💰</span><span>12,450</span></div>
+    </div>
+    <div class="top-bar-right">
+      <button class="collect-btn">📬 收取 <span class="badge">3</span></button>
+      <button class="mode-btn">完整</button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="switchTab(0,this)"><span class="tab-icon">🧙</span><span class="tab-label">角色</span></button>
+    <button class="tab-btn active" onclick="switchTab(1,this)"><span class="tab-icon">🏭</span><span class="tab-label">经营</span></button>
+    <button class="tab-btn" onclick="switchTab(2,this)"><span class="tab-icon">🏰</span><span class="tab-label">地牢</span></button>
+    <button class="tab-btn" onclick="switchTab(3,this)"><span class="tab-icon">⋯</span><span class="tab-label">更多</span></button>
+  </div>
+
+  <div class="panel-area">
+    <!-- Region Selector -->
+    <div class="region-selector">
+      <div class="section-title">采集区域</div>
+      <div class="region-tabs">
+        <button class="region-tab active">
+          <span class="rt-icon">🌿</span>
+          <span class="rt-name">采集</span>
+        </button>
+        <button class="region-tab">
+          <span class="rt-icon">🪓</span>
+          <span class="rt-name">伐木</span>
+        </button>
+        <button class="region-tab">
+          <span class="rt-icon">⛏️</span>
+          <span class="rt-name">挖矿</span>
+        </button>
+        <button class="region-tab">
+          <span class="rt-icon">🎣</span>
+          <span class="rt-name">钓鱼</span>
+        </button>
+      </div>
+      <div class="region-list">
+        <div class="region-item selected">
+          <span class="region-level">Lv.1</span>
+          <span class="region-name">草地</span>
+          <span class="region-quality common">普通</span>
+        </div>
+        <div class="region-item">
+          <span class="region-level">Lv.2</span>
+          <span class="region-name">灌木丛</span>
+          <span class="region-quality fine">优良</span>
+        </div>
+        <div class="region-item">
+          <span class="region-level">Lv.3</span>
+          <span class="region-name">药圃</span>
+          <span class="region-quality fine">优良</span>
+        </div>
+        <div class="region-item locked">
+          <span class="region-level">Lv.4</span>
+          <span class="region-name">迷雾林</span>
+          <span class="region-quality rare">稀有</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Facility List -->
+    <div class="section-title">设施</div>
+
+    <div class="facility-card">
+      <div class="facility-header">
+        <div class="facility-left">
+          <span class="facility-icon">🪵</span>
+          <div>
+            <div class="facility-name">伐木场</div>
+            <div class="facility-level">Lv.2</div>
+          </div>
+        </div>
+        <div class="facility-btns">
+          <button class="facility-btn upgrade">升级</button>
+        </div>
+      </div>
+      <div class="facility-desc">产出+20% · 被动产出木材（每12分钟）</div>
+    </div>
+
+    <div class="facility-card">
+      <div class="facility-header">
+        <div class="facility-left">
+          <span class="facility-icon">🔥</span>
+          <div>
+            <div class="facility-name">锻造坊</div>
+            <div class="facility-level">Lv.1</div>
+          </div>
+        </div>
+        <div class="facility-btns">
+          <button class="facility-btn upgrade">升级</button>
+        </div>
+      </div>
+      <div class="facility-desc">冶炼、强化装备 · 降低冶炼时长5%/级</div>
+    </div>
+
+    <div class="facility-card locked">
+      <div class="facility-header">
+        <div class="facility-left">
+          <span class="facility-icon">⚗️</span>
+          <div>
+            <div class="facility-name">炼金台</div>
+            <div class="facility-level">未建造</div>
+          </div>
+        </div>
+        <div class="facility-btns">
+          <button class="facility-btn build">建造</button>
+        </div>
+      </div>
+      <div class="facility-desc">需要: 3x精钢锭 + 2x法布 + 200💰</div>
+    </div>
+
+    <!-- Work Queue -->
+    <div class="work-queue">
+      <div class="section-title">工作队列</div>
+      <div class="queue-item">
+        <span class="queue-num">1</span>
+        <span class="queue-avatar">🧙</span>
+        <div class="queue-info">
+          <div class="queue-op">铁锤 · 采集</div>
+          <div class="queue-detail">草地 · 单采</div>
+        </div>
+        <div class="queue-progress">
+          <div class="stat-bar-bg"><div class="stat-bar-fill work" style="width:68%"></div></div>
+        </div>
+        <button class="queue-btn">取消</button>
+      </div>
+      <div class="queue-item">
+        <span class="queue-num">2</span>
+        <span class="queue-avatar">🧝</span>
+        <div class="queue-info">
+          <div class="queue-op">月华 · 冶炼</div>
+          <div class="queue-detail">锻造坊 Lv.1 · 铁锭</div>
+        </div>
+        <div class="queue-progress">
+          <div class="stat-bar-bg"><div class="stat-bar-fill work" style="width:35%"></div></div>
+        </div>
+        <button class="queue-btn">取消</button>
+      </div>
+      <div class="queue-item">
+        <span class="queue-num">3</span>
+        <span class="queue-avatar">🗡️</span>
+        <div class="queue-info">
+          <div class="queue-op">夜影 · 伐木</div>
+          <div class="queue-detail">橡木林 · 混合</div>
+        </div>
+        <div class="queue-progress">
+          <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:0%;background:#444"></div></div>
+        </div>
+        <button class="queue-btn">取消</button>
+      </div>
+      <div class="queue-add">+ 添加工作</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 3: DUNGEON TAB ===== -->
+<div class="screen-label" style="margin-top:32px">▶ Tab 3：地牢探险面板</div>
+<div class="window-frame">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="connection-dot"></div>
+      <div class="gold-display"><span class="gold-icon">💰</span><span>12,450</span></div>
+    </div>
+    <div class="top-bar-right">
+      <button class="collect-btn">📬 收取 <span class="badge">3</span></button>
+      <button class="mode-btn">完整</button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="switchTab(0,this)"><span class="tab-icon">🧙</span><span class="tab-label">角色</span></button>
+    <button class="tab-btn" onclick="switchTab(1,this)"><span class="tab-icon">🏭</span><span class="tab-label">经营</span></button>
+    <button class="tab-btn active" onclick="switchTab(2,this)"><span class="tab-icon">🏰</span><span class="tab-label">地牢</span></button>
+    <button class="tab-btn" onclick="switchTab(3,this)"><span class="tab-icon">⋯</span><span class="tab-label">更多</span></button>
+  </div>
+
+  <div class="panel-area">
+    <!-- Dungeon List -->
+    <div class="section-title">地牢列表</div>
+
+    <div class="dungeon-card">
+      <div class="dungeon-header">
+        <span class="dungeon-icon">🏚️</span>
+        <div class="dungeon-info">
+          <div class="dungeon-name">哥布林洞穴</div>
+          <div class="dungeon-level">推荐 Lv.3 · Lv.1-5</div>
+          <div class="dungeon-reward">奖励: 稀有材料 · 铁矿 · 金币</div>
+        </div>
+        <span class="dungeon-status available">可进入</span>
+      </div>
+    </div>
+
+    <div class="dungeon-card">
+      <div class="dungeon-header">
+        <span class="dungeon-icon">💀</span>
+        <div class="dungeon-info">
+          <div class="dungeon-name">亡魂墓穴</div>
+          <div class="dungeon-level">推荐 Lv.8 · Lv.5-10</div>
+          <div class="dungeon-reward">需要: 通关哥布林洞穴</div>
+        </div>
+        <span class="dungeon-status locked">🔒</span>
+      </div>
+    </div>
+
+    <div class="dungeon-card">
+      <div class="dungeon-header">
+        <span class="dungeon-icon">🐉</span>
+        <div class="dungeon-info">
+          <div class="dungeon-name">巨龙巢穴</div>
+          <div class="dungeon-level">推荐 Lv.15 · Lv.10-15</div>
+          <div class="dungeon-reward">奖励: 传说装备 · 设施蓝图</div>
+        </div>
+        <span class="dungeon-status cleared">已通关</span>
+      </div>
+    </div>
+
+    <!-- Mini Map & Exploration Config -->
+    <div class="mini-map">
+      <div class="mini-map-header">
+        <div class="mini-map-title">
+          <span>🗺️</span>
+          <span>哥布林洞穴</span>
+        </div>
+        <span class="floor-indicator">3/5 层</span>
+      </div>
+      <div class="floor-grid">
+        <div class="floor-cell normal">1</div>
+        <div class="floor-cell elite">2</div>
+        <div class="floor-cell current">3</div>
+        <div class="floor-cell empty locked">4</div>
+        <div class="floor-cell boss locked">5</div>
+      </div>
+      <div class="explore-header">
+        <select class="char-selector">
+          <option>🧙 铁锤 (战士 · Lv.5)</option>
+          <option>🧝 月华 (法师 · Lv.3)</option>
+          <option>🗡️ 夜影 (盗贼 · Lv.2)</option>
+        </select>
+        <button class="go-btn">⚔️ 出发探险</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 4: CHARACTER DETAIL (Overlay in character tab) ===== -->
+<div class="screen-label" style="margin-top:32px">▶ 角色详情浮层面板（点击角色卡片展开）</div>
+<div class="window-frame">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="connection-dot"></div>
+      <div class="gold-display"><span class="gold-icon">💰</span><span>12,450</span></div>
+    </div>
+    <div class="top-bar-right">
+      <button class="collect-btn">📬 收取 <span class="badge">3</span></button>
+      <button class="mode-btn">完整</button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="switchTab(0,this)"><span class="tab-icon">🧙</span><span class="tab-label">角色</span></button>
+    <button class="tab-btn" onclick="switchTab(1,this)"><span class="tab-icon">🏭</span><span class="tab-label">经营</span></button>
+    <button class="tab-btn" onclick="switchTab(2,this)"><span class="tab-icon">🏰</span><span class="tab-label">地牢</span></button>
+    <button class="tab-btn" onclick="switchTab(3,this)"><span class="tab-icon">⋯</span><span class="tab-label">更多</span></button>
+  </div>
+
+  <div class="panel-area">
+    <!-- Character card open + floating detail panel -->
+    <div class="character-card working selected">
+      <div class="card-header">
+        <div class="avatar warrior">
+          ⚔️
+          <div class="rarity-dot rare"></div>
+        </div>
+        <div class="card-info">
+          <div class="card-name">铁锤 <span class="skin-tag">Default</span></div>
+          <div class="card-class">战士 · 稀有</div>
+          <div class="card-level">Lv.5</div>
+        </div>
+        <div class="card-actions">
+          <button class="card-btn stop">停止</button>
+          <button class="card-btn explore">探险</button>
+        </div>
+      </div>
+      <div class="stat-bars">
+        <div class="stat-row">
+          <span class="stat-icon">🩸</span><span class="stat-label">HP</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill hp" style="width:80%"></div></div>
+          <span class="stat-value">80/100</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">⚡</span><span class="stat-label">疲劳</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill fatigue" style="width:35%"></div></div>
+          <span class="stat-value">35%</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-icon">⏱</span><span class="stat-label">进度</span>
+          <div class="stat-bar-bg"><div class="stat-bar-fill work" style="width:68%"></div></div>
+          <span class="stat-value">68%</span>
+        </div>
+      </div>
+
+      <!-- Floating Detail Panel -->
+      <div class="floating-panel">
+        <div class="floating-panel-header">
+          <span class="floating-panel-title">⚔️ 铁锤 — 装备与皮肤</span>
+          <button class="close-btn">✕ 关闭</button>
+        </div>
+
+        <!-- Equip Slots -->
+        <div class="equip-section">
+          <div class="section-title" style="margin-bottom:6px">生活装备</div>
+          <div class="equip-grid">
+            <div class="equip-slot has-item">
+              <span class="slot-icon">🪓</span>
+              <span class="item-name">铁斧</span>
+              <span class="slot-label">工具</span>
+            </div>
+            <div class="equip-slot has-item">
+              <span class="slot-icon">👕</span>
+              <span class="item-name">伐木工服</span>
+              <span class="slot-label">服装</span>
+            </div>
+            <div class="equip-slot">
+              <span class="slot-icon">+</span>
+              <span class="slot-label">配件</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skin Switcher -->
+        <div class="skin-switcher">
+          <div class="section-title" style="margin-bottom:6px">皮肤切换</div>
+          <div class="skin-list">
+            <button class="skin-item active">Default</button>
+            <button class="skin-item">Halloween</button>
+            <button class="skin-item">Christmas</button>
+            <button class="skin-item">Swimsuit</button>
+            <button class="skin-item">Lunar</button>
+            <button class="skin-item" style="opacity:0.4" title="未解锁">🔒 Cyber</button>
+          </div>
+        </div>
+
+        <!-- Quick Work Assignment -->
+        <div class="region-selector" style="margin-top:10px">
+          <div class="section-title" style="margin-bottom:6px">快速安排工作</div>
+          <div class="region-tabs">
+            <button class="region-tab active"><span class="rt-icon">🌿</span><span class="rt-name">采集</span></button>
+            <button class="region-tab"><span class="rt-icon">🪓</span><span class="rt-name">伐木</span></button>
+            <button class="region-tab"><span class="rt-icon">⛏️</span><span class="rt-name">挖矿</span></button>
+            <button class="region-tab"><span class="rt-icon">🎣</span><span class="rt-name">钓鱼</span></button>
+          </div>
+          <div class="region-list">
+            <div class="region-item selected">
+              <span class="region-level">Lv.1</span>
+              <span class="region-name">草地</span>
+              <span class="region-quality common">普通</span>
+            </div>
+            <div class="region-item">
+              <span class="region-level">Lv.2</span>
+              <span class="region-name">灌木丛</span>
+              <span class="region-quality fine">优良</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <button class="facility-btn work" style="flex:1;justify-content:center;display:flex;align-items:center;gap:4px">▶ 开始工作</button>
+            <button class="facility-btn upgrade" style="flex:1;justify-content:center;display:flex;align-items:center;gap:4px">🔄 循环模式</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast">✅ 已安排铁锤前往草地采集</div>
+</div>
+
+<!-- ===== SCREEN 5: MORE TAB ===== -->
+<div class="screen-label" style="margin-top:32px">▶ Tab 4：更多面板</div>
+<div class="window-frame">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="connection-dot"></div>
+      <div class="gold-display"><span class="gold-icon">💰</span><span>12,450</span></div>
+    </div>
+    <div class="top-bar-right">
+      <button class="collect-btn">📬 收取 <span class="badge">3</span></button>
+      <button class="mode-btn">完整</button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn" onclick="switchTab(0,this)"><span class="tab-icon">🧙</span><span class="tab-label">角色</span></button>
+    <button class="tab-btn" onclick="switchTab(1,this)"><span class="tab-icon">🏭</span><span class="tab-label">经营</span></button>
+    <button class="tab-btn" onclick="switchTab(2,this)"><span class="tab-icon">🏰</span><span class="tab-label">地牢</span></button>
+    <button class="tab-btn active" onclick="switchTab(3,this)"><span class="tab-icon">⋯</span><span class="tab-label">更多</span></button>
+  </div>
+
+  <div class="panel-area">
+    <div class="more-list">
+      <div class="more-item">
+        <span class="more-icon">🎒</span>
+        <div class="more-info">
+          <div class="more-name">背包</div>
+          <div class="more-desc">查看和管理所有物品 · 40/100 格</div>
+        </div>
+        <span class="more-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-icon">🏪</span>
+        <div class="more-info">
+          <div class="more-name">商店</div>
+          <div class="more-desc">购买装备和道具</div>
+        </div>
+        <span class="more-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-icon">⚙️</span>
+        <div class="more-info">
+          <div class="more-name">设置</div>
+          <div class="more-desc">音效、通知、悬浮窗模式</div>
+        </div>
+        <span class="more-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-icon">❓</span>
+        <div class="more-info">
+          <div class="more-name">帮助</div>
+          <div class="more-desc">游戏指南和常见问题</div>
+        </div>
+        <span class="more-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-icon">📊</span>
+        <div class="more-info">
+          <div class="more-name">成就</div>
+          <div class="more-desc">已解锁 12/30 · 进度: 40%</div>
+        </div>
+        <span class="more-arrow">›</span>
+      </div>
+      <div class="more-item">
+        <span class="more-icon">🔔</span>
+        <div class="more-info">
+          <div class="more-name">公告</div>
+          <div class="more-desc">v1.2.0 更新 · 新增泳装皮肤</div>
+        </div>
+        <span class="more-arrow">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DESIGN SPECS ===== -->
+<div class="desc-section">
+  <h3>📐 设计规范</h3>
+  <p><strong>配色方案</strong></p>
+  <p>
+    <span class="color-swatch" style="background:#0d0d1a"></span>主背景 #0d0d1a &nbsp;
+    <span class="color-swatch" style="background:#1a1a2e"></span>卡片 #1a1a2e &nbsp;
+    <span class="color-swatch" style="background:#252540"></span>次级 #252540 &nbsp;
+    <span class="color-swatch" style="background:#4a4a6e"></span>边框 #4a4a6e &nbsp;
+    <span class="color-swatch" style="background:#ffd700"></span>金色 #ffd700 &nbsp;
+    <span class="color-swatch" style="background:#4ade80"></span>工作 #4ade80 &nbsp;
+    <span class="color-swatch" style="background:#ffa500"></span>地牢 #ffa500 &nbsp;
+    <span class="color-swatch" style="background:#ff6b6b"></span>警告 #ff6b6b
+  </p>
+  <p style="margin-top:10px">
+    <strong>品质颜色：</strong>
+    <span class="color-swatch" style="background:#ffffff;border:1px solid #666"></span>普通 &nbsp;
+    <span class="color-swatch" style="background:#22c55e"></span>优良 &nbsp;
+    <span class="color-swatch" style="background:#3b82f6"></span>稀有 &nbsp;
+    <span class="color-swatch" style="background:#f59e0b"></span>史诗 &nbsp;
+    <span class="color-swatch" style="background:#ef4444"></span>传说
+  </p>
+  <p style="margin-top:12px"><strong>布局规格</strong></p>
+  <p>窗口: 480×720px &nbsp;|&nbsp; 顶栏: 52px &nbsp;|&nbsp; Tab栏: 44px &nbsp;|&nbsp; 内容区: 560px</p>
+  <p style="margin-top:8px">字体: Noto Sans SC + ZCOOL KuaiLe (标题) &nbsp;|&nbsp; 圆角: 6-12px</p>
+  <p style="margin-top:12px"><strong>组件说明</strong></p>
+  <p>所有组件基于 Godot 4.6 的 Control 节点实现。建议将各面板拆分独立场景：<code>CharacterPanel</code>、<code>ManagementPanel</code>、<code>DungeonPanel</code>、<code>MorePanel</code>，通过 <code>TabContainer</code> 组合。角色卡片浮动详情面板作为独立子场景 <code>CharacterDetailPopup</code>，点击角色卡片时实例化并挂载到 <code>FloatingWindowManager</code>。</p>
+  <p style="margin-top:8px">窗口背景使用 Godot 的 <code>StyleBoxFlat</code> 自定义样式，避免使用 NinePatch 纹理。</p>
+</div>
+
+<script>
+function switchTab(idx, btn) {
+  // Visual only - just highlight
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+</script>
+</body>
+</html>
