@@ -1,0 +1,267 @@
+[gd_scene load_steps=4 format=3 uid="uid://grid_game_screen"]
+
+[ext_resource type="Script" path="res://scenes/grid/grid_game_screen.gd" id="1_gs"]
+[ext_resource type="Script" path="res://scripts/grid/grid_manager.gd" id="2_gm"]
+[ext_resource type="Script" path="res://scripts/ui/ui_theme.gd" id="3_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_build"]
+bg_color = Color(0.15, 0.15, 0.25, 0.95)
+border_width_left = 2
+border_width_right = 2
+border_width_top = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.29, 0.43, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
+bg_color = Color(0.15, 0.15, 0.25, 0.95)
+border_width_left = 2
+border_width_right = 2
+border_width_top = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.29, 0.43, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tooltip"]
+bg_color = Color(0.1, 0.1, 0.2, 0.9)
+border_width_left = 1
+border_width_right = 1
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.3, 0.5, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="GridGameScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gs")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.05, 0.1, 0.98)
+
+[node name="TopBar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+offset_bottom = 40.0
+grow_horizontal = 2
+
+[node name="TitleLabel" type="Label" parent="TopBar"]
+layout_mode = 2
+text = "悬浮地牢 - 格子地图"
+
+[node name="Spacer" type="Control" parent="TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BuildButton" type="Button" parent="TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 32)
+text = "建造"
+
+[node name="AddCharButton" type="Button" parent="TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(100, 32)
+text = "添加角色"
+
+[node name="ResetButton" type="Button" parent="TopBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 32)
+text = "重置"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 48.0
+offset_bottom = -80.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 2
+vertical_scroll_mode = 0
+scroll_horizontal_enabled = true
+scroll_vertical_enabled = false
+
+[node name="MapContainer" type="Node2D" parent="ScrollContainer"]
+script = ExtResource("2_gm")
+custom_minimum_size = Vector2(2880, 288)
+
+[node name="BottomBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -72.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BottomContent" type="HBoxContainer" parent="BottomBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="InfoLabel" type="Label" parent="BottomBar/BottomContent"]
+layout_mode = 2
+text = "格子: 90x9 | 点击格子查看信息"
+
+[node name="Spacer" type="Control" parent="BottomBar/BottomContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HelpLabel" type="Label" parent="BottomBar/BottomContent"]
+layout_mode = 2
+text = "滚轮滚动 | 左键建造/选择 | 右键取消"
+
+[node name="BuildPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 48.0
+offset_right = -10.0
+offset_bottom = 300.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_build")
+
+[node name="BuildPanelContent" type="VBoxContainer" parent="BuildPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelTitle" type="Label" parent="BuildPanel/BuildPanelContent"]
+layout_mode = 2
+text = "建造建筑"
+horizontal_alignment = 1
+
+[node name="CloseBtn" type="Button" parent="BuildPanel/BuildPanelContent"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 28)
+text = "关闭"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="BuildPanel/BuildPanelContent"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="BuildingList" type="VBoxContainer" parent="BuildPanel/BuildPanelContent/ScrollContainer"]
+layout_mode = 1
+size_flags_horizontal = 3
+
+[node name="BuildingInfoPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -180.0
+offset_right = 280.0
+offset_bottom = -10.0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_info")
+
+[node name="BuildingInfoContent" type="VBoxContainer" parent="BuildingInfoPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BuildingName" type="Label" parent="BuildingInfoPanel/BuildingInfoContent"]
+layout_mode = 2
+text = "建筑名称"
+
+[node name="BuildingLevel" type="Label" parent="BuildingInfoPanel/BuildingInfoContent"]
+layout_mode = 2
+text = "等级: 1"
+
+[node name="BuildingStatus" type="Label" parent="BuildingInfoPanel/BuildingInfoContent"]
+layout_mode = 2
+text = "状态: 空闲"
+
+[node name="Spacer" type="Control" parent="BuildingInfoPanel/BuildingInfoContent"]
+layout_mode = 2
+size_flags_vertical = 1
+
+[node name="ActionButtons" type="HBoxContainer" parent="BuildingInfoPanel/BuildingInfoContent"]
+layout_mode = 2
+
+[node name="UpgradeBtn" type="Button" parent="BuildingInfoPanel/BuildingInfoContent/ActionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "升级"
+
+[node name="WorkBtn" type="Button" parent="BuildingInfoPanel/BuildingInfoContent/ActionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "工作"
+
+[node name="DemolishBtn" type="Button" parent="BuildingInfoPanel/BuildingInfoContent/ActionButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "拆除"
+
+[node name="FloatingTextContainer" type="Node2D" parent="."]
+
+[node name="TooltipPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_tooltip")
+
+[node name="TooltipContent" type="VBoxContainer" parent="TooltipPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CellPosLabel" type="Label" parent="TooltipPanel/TooltipContent"]
+layout_mode = 2
+text = "格子位置: (0, 0)"
+
+[node name="CellStatusLabel" type="Label" parent="TooltipPanel/TooltipContent"]
+layout_mode = 2
+text = "状态: 空地"
+
+[node name="HintLabel" type="Label" parent="TooltipPanel/TooltipContent"]
+layout_mode = 2
+text = "点击建造或查看信息"
+horizontal_alignment = 1

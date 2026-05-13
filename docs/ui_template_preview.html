@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>悬浮地牢 - UI 模板预览</title>
+    <style>
+        :root {
+            /* 基础色 */
+            --bg-primary: #0d0d1a;
+            --bg-card: #1a1a2e;
+            --bg-secondary: #252540;
+            --bg-hover: #2a2a50;
+            --border: #4a4a6e;
+            --border-bright: #6b6b9e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888888;
+            --text-dim: #555555;
+
+            /* 强调色 */
+            --gold: #ffd700;
+            --gold-dim: #b8960f;
+            --green: #4ade80;
+            --green-dark: #2d7a50;
+            --orange: #ffa500;
+            --orange-dark: #7a4200;
+            --red: #ff6b6b;
+            --purple: #7f77dd;
+            --blue: #60a5fa;
+
+            /* 品质色 */
+            --quality-common: #e0e0e0;
+            --quality-fine: #4ade80;
+            --quality-rare: #60a5fa;
+            --quality-epic: #ffa500;
+            --quality-legendary: #ffd700;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .preview-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .preview-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .preview-header h1 {
+            font-size: 28px;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .preview-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* 模式切换标签 */
+        .mode-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .mode-tab {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-tab:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-bright);
+        }
+
+        .mode-tab.active {
+            background: var(--bg-secondary);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* 游戏窗口容器 */
+        .game-window {
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 横屏模式 */
+        .landscape-mode {
+            width: 100%;
+            min-height: 400px;
+        }
+
+        /* 竖屏模式 */
+        .portrait-mode {
+            width: 480px;
+            margin: 0 auto;
+            min-height: 600px;
+            display: none;
+        }
+
+        /* 边栏模式 */
+        .sidebar-mode {
+            width: 240px;
+            margin: 0 auto;
+            min-height: 500px;
+            display: none;
+        }
+
+        /* 顶部状态栏 */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .connection-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        .connection-dot.disconnected {
+            background: var(--red);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .currency-display {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gold-dim);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .currency-display .icon {
+            font-size: 16px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .collect-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, var(--red) 0%, #cc5555 100%);
+            border-radius: 16px;
+            font-size: 12px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .mode-btn {
+            padding: 4px 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .mode-btn.active {
+            background: var(--gold-dim);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .window-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .window-btn.close:hover {
+            background: var(--red);
+            border-color: var(--red);
+            color: white;
+        }
+
+        /* 主场景区域 */
+        .main-scene {
+            position: relative;
+            height: 220px;
+            background: linear-gradient(180deg, #1a2a3a 0%, #0f1a24 60%, #2a3a2a 100%);
+            overflow: hidden;
+        }
+
+        /* 背景装饰 */
+        .scene-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sky-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: linear-gradient(180deg, #1a2a3a 0%, #2a4a5a 100%);
+        }
+
+        .ground-gradient {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 45%;
+            background: linear-gradient(180deg, #3a4a3a 0%, #2a3a2a 100%);
+        }
+
+        /* 采集区域 */
+        .gathering-areas {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        .gathering-region {
+            flex: 1;
+            max-width: 180px;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .region-herb { border-color: var(--green); }
+        .region-wood { border-color: #8b5a2b; }
+        .region-mine { border-color: #8888aa; }
+        .region-fish { border-color: var(--blue); }
+
+        .region-icon {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        .region-name {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* 角色 */
+        .character-sprite {
+            position: absolute;
+            font-size: 36px;
+            transition: all 0.5s ease-in-out;
+            cursor: pointer;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .character-sprite:hover {
+            transform: scale(1.2);
+            filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.3));
+        }
+
+        .char-1 { bottom: 40px; left: 12%; }
+        .char-2 { bottom: 50px; left: 35%; }
+        .char-3 { bottom: 35px; left: 58%; }
+        .char-4 { bottom: 55px; left: 78%; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .char-working {
+            animation: float 0.5s ease-in-out infinite;
+        }
+
+        /* 飘字动画 */
+        .floating-text {
+            position: absolute;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            animation: popUp 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes popUp {
+            0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+            20% { opacity: 1; transform: translateY(0) scale(1.1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1); }
+        }
+
+        /* 资源栏 */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .resource-chips {
+            display: flex;
+            gap: 16px;
+        }
+
+        .resource-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .resource-chip .icon {
+            font-size: 16px;
+        }
+
+        .resource-chip .amount {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .resource-chip .gain {
+            color: var(--green);
+            font-size: 11px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* 角色状态行 */
+        .character-status {
+            display: flex;
+            gap: 12px;
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .char-status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .char-status-item .icon {
+            font-size: 14px;
+        }
+
+        .char-status-item .status {
+            color: var(--green);
+        }
+
+        .char-status-item .status.rest {
+            color: var(--blue);
+        }
+
+        .char-status-item .status.dungeon {
+            color: var(--orange);
+        }
+
+        /* 底部信息栏 */
+        .bottom-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: var(--bg-card);
+        }
+
+        .bottom-info {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .bottom-info span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .timer {
+            color: var(--gold);
+            font-weight: 500;
+        }
+
+        /* Tab 导航 */
+        .tab-nav {
+            display: flex;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--bg-card);
+            border-bottom-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* 内容区域 */
+        .content-area {
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .content-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        /* 角色卡片 */
+        .character-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--green);
+        }
+
+        .character-card.working::before { background: var(--green); }
+        .character-card.resting::before { background: var(--blue); }
+        .character-card.dungeon::before { background: var(--orange); }
+
+        .character-card:hover {
+            border-color: var(--border-bright);
+            transform: translateX(4px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .char-info {
+            flex: 1;
+        }
+
+        .char-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .char-class {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .char-level {
+            font-size: 12px;
+            color: var(--gold);
+            background: var(--bg-secondary);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .card-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat-item {
+            font-size: 11px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .stat-bar {
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .stat-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .stat-fill.hp { background: var(--red); }
+        .stat-fill.fatigue { background: var(--orange); }
+        .stat-fill.work { background: var(--green); }
+
+        /* 角色详情浮窗 */
+        .floating-panel {
+            position: absolute;
+            right: 20px;
+            top: 50px;
+            width: 280px;
+            background: var(--bg-card);
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            display: none;
+        }
+
+        .floating-panel.show {
+            display: block;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-size: 13px;
+            color: var(--gold);
+        }
+
+        .panel-close {
+            width: 24px;
+            height: 24px;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .panel-close:hover {
+            background: var(--red);
+            color: white;
+        }
+
+        .panel-section {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .equipment-slots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .equip-slot {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
+        }
+
+        .equip-slot .slot-label {
+            font-size: 8px;
+            color: var(--text-dim);
+            position: absolute;
+            bottom: 2px;
+        }
+
+        .skin-switch {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .skin-btn {
+            padding: 4px 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .skin-btn.active {
+            background: var(--gold-dim);
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background: var(--green-dark);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .action-btn.secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .action-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 竖屏模式内容 */
+        .portrait-content {
+            padding: 12px;
+        }
+
+        .portrait-scene {
+            height: 150px;
+            background: linear-gradient(180deg, #1a2a3a 0%, #0f1a24 60%, #2a3a2a 100%);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portrait-scene .gathering-areas {
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+        }
+
+        .portrait-scene .gathering-region {
+            height: 60px;
+        }
+
+        .portrait-scene .character-sprite {
+            font-size: 28px;
+        }
+
+        .resource-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .section-header {
+            font-size: 13px;
+            color: var(--gold);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .resource-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .resource-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .resource-item .icon {
+            font-size: 14px;
+        }
+
+        .resource-item .name {
+            flex: 1;
+            color: var(--text-secondary);
+        }
+
+        .resource-item .amount {
+            color: var(--text-primary);
+        }
+
+        /* 边栏模式 */
+        .sidebar-content {
+            padding: 12px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-item:hover {
+            border-color: var(--gold);
+            background: var(--bg-secondary);
+        }
+
+        .sidebar-item .icon {
+            font-size: 24px;
+        }
+
+        .sidebar-item .info {
+            flex: 1;
+        }
+
+        .sidebar-item .label {
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .sidebar-item .value {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .sidebar-timer {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .sidebar-timer .time {
+            font-size: 28px;
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        .sidebar-timer .label {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--green-dark);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .btn-warning {
+            background: var(--orange-dark);
+            color: var(--orange);
+            border: 1px solid var(--orange);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 说明面板 */
+        .info-panel {
+            margin-top: 30px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .info-panel h3 {
+            color: var(--gold);
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .info-item h4 {
+            color: var(--green);
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .info-item p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .color-palette {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 2px solid var(--border);
+            position: relative;
+        }
+
+        .color-swatch::after {
+            content: attr(data-name);
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <div class="preview-header">
+            <h1>🏰 悬浮地牢 UI 模板预览</h1>
+            <p>基于 v2.1 综合版 UI 设计规范 | 参考: Rusty's Retirement</p>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="landscape">横屏模式 (Rusty's 风格)</button>
+            <button class="mode-tab" data-mode="portrait">竖屏模式 (经典窗口)</button>
+            <button class="mode-tab" data-mode="sidebar">边栏模式 (极简)</button>
+        </div>
+
+        <!-- 横屏模式 -->
+        <div class="game-window landscape-mode" id="landscape">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <div class="connection-indicator">
+                        <div class="connection-dot"></div>
+                        <span>已连接</span>
+                    </div>
+                    <div class="currency-display">
+                        <span class="icon">💰</span>
+                        <span>12,450</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="collect-badge">
+                        <span>📬</span>
+                        <span>收取 8</span>
+                    </div>
+                    <div class="mode-buttons">
+                        <button class="mode-btn active">完整</button>
+                        <button class="mode-btn">紧凑</button>
+                        <button class="mode-btn">迷你</button>
+                    </div>
+                    <div class="window-controls">
+                        <button class="window-btn">−</button>
+                        <button class="window-btn">□</button>
+                        <button class="window-btn close">×</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-scene">
+                <div class="scene-background">
+                    <div class="sky-gradient"></div>
+                    <div class="ground-gradient"></div>
+                </div>
+
+                <div class="gathering-areas">
+                    <div class="gathering-region region-herb">
+                        <span class="region-icon">🌿</span>
+                        <span class="region-name">草药区</span>
+                    </div>
+                    <div class="gathering-region region-wood">
+                        <span class="region-icon">🌳</span>
+                        <span class="region-name">伐木区</span>
+                    </div>
+                    <div class="gathering-region region-mine">
+                        <span class="region-icon">🪨</span>
+                        <span class="region-name">矿区</span>
+                    </div>
+                    <div class="gathering-region region-fish">
+                        <span class="region-icon">🌊</span>
+                        <span class="region-name">渔区</span>
+                    </div>
+                </div>
+
+                <div class="character-sprite char-1 char-working" style="animation-delay: 0s;">🧙</div>
+                <div class="character-sprite char-2 char-working" style="animation-delay: 0.2s;">🧝</div>
+                <div class="character-sprite char-3 char-working" style="animation-delay: 0.4s;">⛏️</div>
+                <div class="character-sprite char-4 char-working" style="animation-delay: 0.6s;">🎣</div>
+
+                <div class="floating-text" style="left: 15%; bottom: 120px;">🌿+1</div>
+                <div class="floating-text" style="left: 38%; bottom: 130px;">🪵+1</div>
+                <div class="floating-text" style="left: 60%; bottom: 115px;">⚒️+1</div>
+            </div>
+
+            <div class="status-bar">
+                <div class="resource-chips">
+                    <div class="resource-chip">
+                        <span class="icon">🌿</span>
+                        <span class="amount">234</span>
+                        <span class="gain">+12</span>
+                    </div>
+                    <div class="resource-chip">
+                        <span class="icon">🪵</span>
+                        <span class="amount">189</span>
+                        <span class="gain">+8</span>
+                    </div>
+                    <div class="resource-chip">
+                        <span class="icon">⚒️</span>
+                        <span class="amount">156</span>
+                        <span class="gain">+5</span>
+                    </div>
+                    <div class="resource-chip">
+                        <span class="icon">🐟</span>
+                        <span class="amount">89</span>
+                        <span class="gain">+3</span>
+                    </div>
+                </div>
+                <div class="info-label">
+                    💰 金币: <span style="color: var(--gold);">12,450</span>
+                </div>
+            </div>
+
+            <div class="character-status">
+                <div class="char-status-item">
+                    <span class="icon">🧙</span>
+                    <span>艾伦</span>
+                    <span class="status">[采集中]</span>
+                </div>
+                <div class="char-status-item">
+                    <span class="icon">🧝</span>
+                    <span>贝拉</span>
+                    <span class="status">[伐木中]</span>
+                </div>
+                <div class="char-status-item">
+                    <span class="icon">⛏️</span>
+                    <span>伊凡</span>
+                    <span class="status">[采矿中]</span>
+                </div>
+                <div class="char-status-item">
+                    <span class="icon">🎣</span>
+                    <span>汪酱</span>
+                    <span class="status">[钓鱼中]</span>
+                </div>
+                <div class="char-status-item">
+                    <span class="icon">🧚</span>
+                    <span>小美</span>
+                    <span class="status rest">[休息中]</span>
+                </div>
+                <div class="char-status-item">
+                    <span class="icon">⚔️</span>
+                    <span>剑魂</span>
+                    <span class="status dungeon">[探险中]</span>
+                </div>
+            </div>
+
+            <div class="bottom-bar">
+                <div class="bottom-info">
+                    <span>📦 库存: 668</span>
+                    <span>👥 6/12</span>
+                    <span>🏠 设施 Lv.3</span>
+                </div>
+                <div class="timer">⏰ 下次收获: 3:00</div>
+            </div>
+
+            <div class="tab-nav">
+                <button class="tab-btn active">🧙 角色</button>
+                <button class="tab-btn">🔨 经营</button>
+                <button class="tab-btn">🗡️ 地牢</button>
+                <button class="tab-btn">⚙️ 设置</button>
+            </div>
+
+            <div class="content-area">
+                <div class="character-card working">
+                    <div class="card-header">
+                        <div class="avatar">🧙</div>
+                        <div class="char-info">
+                            <div class="char-name">艾伦</div>
+                            <div class="char-class">法师 · 普通</div>
+                        </div>
+                        <div class="char-level">Lv.12</div>
+                    </div>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">HP</div>
+                            <div class="stat-bar"><div class="stat-fill hp" style="width: 80%;"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">疲劳</div>
+                            <div class="stat-bar"><div class="stat-fill fatigue" style="width: 30%;"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">进度</div>
+                            <div class="stat-bar"><div class="stat-fill work" style="width: 65%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="character-card working">
+                    <div class="card-header">
+                        <div class="avatar">🧝</div>
+                        <div class="char-info">
+                            <div class="char-name">贝拉</div>
+                            <div class="char-class">盗贼 · 稀有</div>
+                        </div>
+                        <div class="char-level">Lv.8</div>
+                    </div>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">HP</div>
+                            <div class="stat-bar"><div class="stat-fill hp" style="width: 95%;"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">疲劳</div>
+                            <div class="stat-bar"><div class="stat-fill fatigue" style="width: 15%;"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">进度</div>
+                            <div class="stat-bar"><div class="stat-fill work" style="width: 40%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="character-card resting">
+                    <div class="card-header">
+                        <div class="avatar">🧚</div>
+                        <div class="char-info">
+                            <div class="char-name">小美</div>
+                            <div class="char-class">治疗师 · 普通</div>
+                        </div>
+                        <div class="char-level">Lv.5</div>
+                    </div>
+                    <div class="card-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">HP</div>
+                            <div class="stat-bar"><div class="stat-fill hp" style="width: 100%;"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">疲劳</div>
+                            <div class="stat-bar"><div class="stat-fill fatigue" style="width: 85%;"></div></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">休息</div>
+                            <div class="stat-bar"><div class="stat-fill work" style="width: 50%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 角色详情浮窗 -->
+            <div class="floating-panel show">
+                <div class="panel-header">
+                    <span class="panel-title">🧙 艾伦 — 装备与皮肤</span>
+                    <button class="panel-close">✕</button>
+                </div>
+                <div class="panel-section">
+                    <div class="section-title">生活装备</div>
+                    <div class="equipment-slots">
+                        <div class="equip-slot">
+                            🪓
+                            <span class="slot-label">工具</span>
+                        </div>
+                        <div class="equip-slot">
+                            👕
+                            <span class="slot-label">服装</span>
+                        </div>
+                        <div class="equip-slot">
+                            +
+                            <span class="slot-label">配件</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <div class="section-title">皮肤切换</div>
+                    <div class="skin-switch">
+                        <button class="skin-btn active">Default ✓</button>
+                        <button class="skin-btn">Halloween</button>
+                        <button class="skin-btn">Xmas</button>
+                        <button class="skin-btn">Swimsuit</button>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <div class="section-title">快速安排工作</div>
+                    <div class="action-buttons">
+                        <button class="action-btn primary">▶ 开始工作</button>
+                        <button class="action-btn secondary">🔄 循环模式</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 竖屏模式 -->
+        <div class="game-window portrait-mode" id="portrait">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <span style="font-size: 16px;">🏰</span>
+                    <span style="font-size: 14px; color: var(--gold);">悬浮地牢</span>
+                </div>
+                <div class="window-controls">
+                    <button class="window-btn">−</button>
+                    <button class="window-btn close">×</button>
+                </div>
+            </div>
+
+            <div class="portrait-scene">
+                <div class="gathering-areas">
+                    <div class="gathering-region region-herb"><span class="region-icon">🌿</span></div>
+                    <div class="gathering-region region-wood"><span class="region-icon">🌳</span></div>
+                    <div class="gathering-region region-mine"><span class="region-icon">🪨</span></div>
+                    <div class="gathering-region region-fish"><span class="region-icon">🌊</span></div>
+                </div>
+                <div class="character-sprite" style="bottom: 75px; left: 10%; font-size: 22px;">🧙</div>
+                <div class="character-sprite" style="bottom: 80px; left: 35%; font-size: 22px;">🧝</div>
+                <div class="character-sprite" style="bottom: 70px; left: 60%; font-size: 22px;">⛏️</div>
+                <div class="character-sprite" style="bottom: 85px; left: 82%; font-size: 22px;">🎣</div>
+            </div>
+
+            <div class="portrait-content">
+                <div class="resource-section">
+                    <div class="section-header">📦 资源</div>
+                    <div class="resource-list">
+                        <div class="resource-item"><span class="icon">🌿</span><span class="name">草药</span><span class="amount">234</span></div>
+                        <div class="resource-item"><span class="icon">🪵</span><span class="name">木材</span><span class="amount">189</span></div>
+                        <div class="resource-item"><span class="icon">⚒️</span><span class="name">铁矿</span><span class="amount">156</span></div>
+                        <div class="resource-item"><span class="icon">💰</span><span class="name">金币</span><span class="amount" style="color: var(--gold);">12,450</span></div>
+                    </div>
+                </div>
+
+                <div class="resource-section">
+                    <div class="section-header">👥 角色 (6/12)</div>
+                    <div class="character-card working" style="margin-bottom: 8px;">
+                        <div class="card-header">
+                            <div class="avatar" style="width: 36px; height: 36px; font-size: 18px;">🧙</div>
+                            <div class="char-info">
+                                <div class="char-name">艾伦</div>
+                                <div class="char-class">法师 · Lv.12</div>
+                            </div>
+                            <span class="status" style="font-size: 11px;">采集中</span>
+                        </div>
+                    </div>
+                    <div class="character-card working" style="margin-bottom: 8px;">
+                        <div class="card-header">
+                            <div class="avatar" style="width: 36px; height: 36px; font-size: 18px;">🧝</div>
+                            <div class="char-info">
+                                <div class="char-name">贝拉</div>
+                                <div class="char-class">盗贼 · Lv.8</div>
+                            </div>
+                            <span class="status" style="font-size: 11px;">伐木中</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="resource-section">
+                    <div class="section-title">⏰ 下次收获: 3:00</div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 8px;">📬 收取全部</button>
+                </div>
+            </div>
+
+            <div class="tab-nav">
+                <button class="tab-btn active">🧙</button>
+                <button class="tab-btn">🔨</button>
+                <button class="tab-btn">🗡️</button>
+                <button class="tab-btn">⚙️</button>
+            </div>
+        </div>
+
+        <!-- 边栏模式 -->
+        <div class="game-window sidebar-mode" id="sidebar">
+            <div class="topbar" style="padding: 10px;">
+                <span style="font-size: 18px;">🏰</span>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="sidebar-item">
+                    <span class="icon">📦</span>
+                    <div class="info">
+                        <div class="label">库存</div>
+                        <div class="value">668 物品</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-item">
+                    <span class="icon">💰</span>
+                    <div class="info">
+                        <div class="label">金币</div>
+                        <div class="value">12,450</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-item">
+                    <span class="icon">👥</span>
+                    <div class="info">
+                        <div class="label">角色</div>
+                        <div class="value">6/12 在岗</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-timer">
+                    <div class="time">3:00</div>
+                    <div class="label">下次收获</div>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; margin-top: 12px;">📬 收取</button>
+            </div>
+        </div>
+
+        <!-- 设计说明 -->
+        <div class="info-panel">
+            <h3>📋 设计规范说明</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h4>🎨 配色方案</h4>
+                    <div class="color-palette">
+                        <div class="color-swatch" style="background: #0d0d1a;" data-name="主背景"></div>
+                        <div class="color-swatch" style="background: #1a1a2e;" data-name="卡片"></div>
+                        <div class="color-swatch" style="background: #252540;" data-name="次级"></div>
+                        <div class="color-swatch" style="background: #4ade80;" data-name="工作中"></div>
+                        <div class="color-swatch" style="background: #ffa500;" data-name="探险"></div>
+                        <div class="color-swatch" style="background: #ffd700;" data-name="金色"></div>
+                        <div class="color-swatch" style="background: #60a5fa;" data-name="休息"></div>
+                    </div>
+                    <p style="margin-top: 12px;">深色主题 + 高对比度强调色，适合长时间常驻屏幕</p>
+                </div>
+                <div class="info-item">
+                    <h4>✨ 动画效果</h4>
+                    <p>• 角色浮动动画 (0.5s ease-in-out)<br>
+                       • 产出飘字动画 (0.8s ease-out)<br>
+                       • 卡片悬停变换 (0.2s)<br>
+                       • 连接指示器脉冲 (2s infinite)<br>
+                       • 收取按钮弹跳 (1s infinite)</p>
+                </div>
+                <div class="info-item">
+                    <h4>📐 三种显示模式</h4>
+                    <p>• <strong>横屏</strong>: 底部横条，动态场景，类似 Rusty's<br>
+                       • <strong>竖屏</strong>: 经典窗口，480×640px<br>
+                       • <strong>边栏</strong>: 极简侧边栏，200-280px</p>
+                </div>
+                <div class="info-item">
+                    <h4>🎮 核心交互</h4>
+                    <p>• 点击角色卡片 → 展开详情浮窗<br>
+                       • 点击采集区域 → 打开区域详情<br>
+                       • 拖拽角色 → 切换工作区域<br>
+                       • Ctrl+M → 切换显示模式</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模式切换
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const mode = tab.dataset.mode;
+                document.getElementById('landscape').style.display = mode === 'landscape' ? 'block' : 'none';
+                document.getElementById('portrait').style.display = mode === 'portrait' ? 'block' : 'none';
+                document.getElementById('sidebar').style.display = mode === 'sidebar' ? 'block' : 'none';
+            });
+        });
+
+        // Tab 切换
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const parent = btn.closest('.tab-nav');
+                parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // 浮窗关闭
+        document.querySelector('.panel-close').addEventListener('click', () => {
+            document.querySelector('.floating-panel').classList.remove('show');
+        });
+
+        // 角色卡片点击展开浮窗
+        document.querySelectorAll('.character-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelector('.floating-panel').classList.add('show');
+            });
+        });
+
+        // 模拟飘字动画
+        function createFloatingText(x, y, text) {
+            const scene = document.querySelector('.main-scene');
+            const float = document.createElement('div');
+            float.className = 'floating-text';
+            float.style.left = x + '%';
+            float.style.bottom = '120px';
+            float.textContent = text;
+            scene.appendChild(float);
+            setTimeout(() => float.remove(), 800);
+        }
+
+        // 随机触发飘字
+        setInterval(() => {
+            const chars = ['🧙', '🧝', '⛏️', '🎣'];
+            const resources = ['🌿+1', '🪵+1', '⚒️+1', '🐟+1'];
+            const positions = [12, 35, 58, 78];
+            const idx = Math.floor(Math.random() * 4);
+            createFloatingText(positions[idx], 0, resources[idx]);
+        }, 2000);
+    </script>
+</body>
+</html>

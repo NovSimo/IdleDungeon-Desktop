@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>悬浮地牢 - 格子地图预览</title>
+    <style>
+        :root {
+            --bg-primary: #0d0d1a;
+            --bg-card: #1a1a2e;
+            --bg-secondary: #252540;
+            --bg-hover: #2a2a50;
+            --border: #4a4a6e;
+            --border-bright: #6b6b9e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888888;
+            --text-dim: #555555;
+            --gold: #ffd700;
+            --gold-dim: #b8960f;
+            --green: #4ade80;
+            --green-dark: #2d7a50;
+            --orange: #ffa500;
+            --orange-dark: #7a4200;
+            --red: #ff6b6b;
+            --blue: #60a5fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: var(--gold);
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* 顶部状态栏 */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .currency-display {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--gold-dim);
+            border-radius: 16px;
+            font-size: 13px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .collect-badge {
+            padding: 4px 10px;
+            background: linear-gradient(135deg, var(--red) 0%, #cc5555 100%);
+            border-radius: 12px;
+            font-size: 11px;
+            animation: bounce 1.5s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .window-btn {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .window-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .window-btn.close:hover {
+            background: var(--red);
+            color: white;
+        }
+
+        /* 游戏主区域 */
+        .game-main {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* 地图容器 */
+        .map-container {
+            background: linear-gradient(180deg, #1a2a3a 0%, #0f1a24 40%, #1a2a1a 100%);
+            padding: 12px;
+            overflow: auto;
+        }
+
+        .map-scroll {
+            position: relative;
+            /* 横向90-135格，竖向9格 */
+            width: calc(90 * var(--cell-size));
+            height: calc(9 * var(--cell-size));
+            min-width: 900px;
+            min-height: 450px;
+        }
+
+        :root {
+            --cell-size: 32px;
+        }
+
+        /* 格子网格 */
+        .grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(90, var(--cell-size));
+            grid-template-rows: repeat(9, var(--cell-size));
+            pointer-events: none;
+        }
+
+        .cell {
+            border: 1px solid rgba(74, 74, 110, 0.3);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* 可建造格子 */
+        .cell.buildable {
+            background: rgba(74, 222, 128, 0.05);
+            border-color: rgba(74, 222, 128, 0.2);
+        }
+
+        .cell.buildable:hover {
+            background: rgba(74, 222, 128, 0.15);
+            cursor: pointer;
+        }
+
+        /* 选中格子 */
+        .cell.selected {
+            background: rgba(255, 215, 0, 0.2) !important;
+            border-color: var(--gold) !important;
+        }
+
+        /* 建造预览 */
+        .build-preview {
+            position: absolute;
+            border: 2px dashed var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .build-preview.active {
+            opacity: 1;
+        }
+
+        /* 建筑 */
+        .building {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .building:hover {
+            border-color: var(--gold);
+            transform: scale(1.05);
+            z-index: 20;
+        }
+
+        .building .icon {
+            font-size: 18px;
+        }
+
+        .building .level {
+            font-size: 9px;
+            color: var(--text-dim);
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+        }
+
+        .building.working {
+            border-color: var(--green);
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+        }
+
+        /* 建筑类型尺寸定义 */
+        .building[data-type="cabin"] {
+            /* 伐木小屋: 2x2 */
+            width: calc(2 * var(--cell-size) - 2px);
+            height: calc(2 * var(--cell-size) - 2px);
+        }
+
+        .building[data-type="herb-garden"] {
+            /* 草药园: 3x2 */
+            width: calc(3 * var(--cell-size) - 2px);
+            height: calc(2 * var(--cell-size) - 2px);
+        }
+
+        .building[data-type="mine"] {
+            /* 矿洞: 3x3 */
+            width: calc(3 * var(--cell-size) - 2px);
+            height: calc(3 * var(--cell-size) - 2px);
+        }
+
+        .building[data-type="fishing-spot"] {
+            /* 渔点: 2x1 */
+            width: calc(2 * var(--cell-size) - 2px);
+            height: calc(1 * var(--cell-size) - 2px);
+        }
+
+        .building[data-type="workshop"] {
+            /* 加工坊: 4x3 */
+            width: calc(4 * var(--cell-size) - 2px);
+            height: calc(3 * var(--cell-size) - 2px);
+        }
+
+        .building[data-type="storage"] {
+            /* 仓库: 3x2 */
+            width: calc(3 * var(--cell-size) - 2px);
+            height: calc(2 * var(--cell-size) - 2px);
+        }
+
+        .building[data-type="barracks"] {
+            /* 兵营: 4x2 */
+            width: calc(4 * var(--cell-size) - 2px);
+            height: calc(2 * var(--cell-size) - 2px);
+        }
+
+        /* 角色 */
+        .character {
+            position: absolute;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 30;
+            transition: all 0.5s ease-in-out;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .character:hover {
+            transform: scale(1.2);
+            filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.4));
+            z-index: 40;
+        }
+
+        .character.working {
+            animation: work 0.5s ease-in-out infinite;
+        }
+
+        @keyframes work {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        /* 飘字 */
+        .floating-text {
+            position: absolute;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            animation: popUp 0.8s ease-out forwards;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes popUp {
+            0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+            20% { opacity: 1; transform: translateY(0) scale(1.1); }
+            100% { opacity: 0; transform: translateY(-30px) scale(1); }
+        }
+
+        /* 资源栏 */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+        }
+
+        .resource-chips {
+            display: flex;
+            gap: 16px;
+        }
+
+        .resource-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .resource-chip .gain {
+            color: var(--green);
+            font-size: 10px;
+        }
+
+        .bottom-info {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* 建造面板 */
+        .build-panel {
+            position: absolute;
+            left: 12px;
+            top: 60px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 100;
+            min-width: 160px;
+            display: none;
+        }
+
+        .build-panel.show {
+            display: block;
+        }
+
+        .build-panel-title {
+            font-size: 12px;
+            color: var(--gold);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .build-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .build-item:hover {
+            border-color: var(--green);
+            background: var(--bg-hover);
+        }
+
+        .build-item.selected {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .build-item .icon {
+            font-size: 20px;
+        }
+
+        .build-item .info {
+            flex: 1;
+        }
+
+        .build-item .name {
+            font-size: 11px;
+            color: var(--text-primary);
+        }
+
+        .build-item .size {
+            font-size: 9px;
+            color: var(--text-dim);
+        }
+
+        /* 信息面板 */
+        .info-panel {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            z-index: 100;
+            min-width: 180px;
+        }
+
+        .info-title {
+            font-size: 12px;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            color: var(--text-primary);
+        }
+
+        /* 提示 */
+        .hint {
+            text-align: center;
+            padding: 8px;
+            background: var(--bg-secondary);
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .hint strong {
+            color: var(--green);
+        }
+
+        /* 选中提示 */
+        .selection-info {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 12px;
+            z-index: 100;
+            display: none;
+        }
+
+        .selection-info.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏰 悬浮地牢 - 格子地图</h1>
+            <p>90×9 格子 · 可建造 · 角色自由移动</p>
+        </div>
+
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="connection-indicator">
+                    <div class="connection-dot"></div>
+                    <span>已连接</span>
+                </div>
+                <div class="currency-display">
+                    <span>💰</span>
+                    <span>12,450</span>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="collect-badge">📬 收取 8</div>
+                <div class="window-controls">
+                    <button class="window-btn">−</button>
+                    <button class="window-btn">□</button>
+                    <button class="window-btn close">×</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-main">
+            <div class="map-container">
+                <div class="map-scroll" id="mapScroll">
+                    <!-- 网格 -->
+                    <div class="grid" id="grid"></div>
+
+                    <!-- 建造预览 -->
+                    <div class="build-preview" id="buildPreview"></div>
+
+                    <!-- 建筑 -->
+                    <div class="building working" data-type="cabin" data-id="b1" style="left: 64px; top: 128px;" title="伐木小屋 Lv.2">
+                        <span class="icon">🪓</span>
+                        <span class="level">Lv.2</span>
+                    </div>
+                    <div class="building" data-type="herb-garden" data-id="b2" style="left: 160px; top: 64px;" title="草药园 Lv.1">
+                        <span class="icon">🌿</span>
+                        <span class="level">Lv.1</span>
+                    </div>
+                    <div class="building working" data-type="mine" data-id="b3" style="left: 352px; top: 96px;" title="矿洞 Lv.3">
+                        <span class="icon">⛏️</span>
+                        <span class="level">Lv.3</span>
+                    </div>
+                    <div class="building" data-type="fishing-spot" data-id="b4" style="left: 800px; top: 64px;" title="渔点 Lv.1">
+                        <span class="icon">🎣</span>
+                        <span class="level">Lv.1</span>
+                    </div>
+                    <div class="building" data-type="workshop" data-id="b5" style="left: 576px; top: 128px;" title="加工坊 Lv.1">
+                        <span class="icon">🔨</span>
+                        <span class="level">Lv.1</span>
+                    </div>
+                    <div class="building" data-type="storage" data-id="b6" style="left: 864px; top: 128px;" title="仓库 Lv.2">
+                        <span class="icon">📦</span>
+                        <span class="level">Lv.2</span>
+                    </div>
+
+                    <!-- 角色 -->
+                    <div class="character working" id="char1" style="left: 80px; top: 64px;">🧙</div>
+                    <div class="character working" id="char2" style="left: 176px; top: 96px;">🧝</div>
+                    <div class="character" id="char3" style="left: 368px; top: 64px;">⛏️</div>
+                    <div class="character" id="char4" style="left: 816px; top: 96px;">🎣</div>
+                </div>
+
+                <!-- 建造面板 -->
+                <div class="build-panel" id="buildPanel">
+                    <div class="build-panel-title">🏗️ 建造建筑</div>
+                    <div class="build-item" data-type="cabin" data-width="2" data-height="2">
+                        <span class="icon">🪓</span>
+                        <div class="info">
+                            <div class="name">伐木小屋</div>
+                            <div class="size">2×2</div>
+                        </div>
+                    </div>
+                    <div class="build-item" data-type="herb-garden" data-width="3" data-height="2">
+                        <span class="icon">🌿</span>
+                        <div class="info">
+                            <div class="name">草药园</div>
+                            <div class="size">3×2</div>
+                        </div>
+                    </div>
+                    <div class="build-item" data-type="mine" data-width="3" data-height="3">
+                        <span class="icon">⛏️</span>
+                        <div class="info">
+                            <div class="name">矿洞</div>
+                            <div class="size">3×3</div>
+                        </div>
+                    </div>
+                    <div class="build-item" data-type="fishing-spot" data-width="2" data-height="1">
+                        <span class="icon">🎣</span>
+                        <div class="info">
+                            <div class="name">渔点</div>
+                            <div class="size">2×1</div>
+                        </div>
+                    </div>
+                    <div class="build-item" data-type="workshop" data-width="4" data-height="3">
+                        <span class="icon">🔨</span>
+                        <div class="info">
+                            <div class="name">加工坊</div>
+                            <div class="size">4×3</div>
+                        </div>
+                    </div>
+                    <div class="build-item" data-type="storage" data-width="3" data-height="2">
+                        <span class="icon">📦</span>
+                        <div class="info">
+                            <div class="name">仓库</div>
+                            <div class="size">3×2</div>
+                        </div>
+                    </div>
+                    <div class="build-item" data-type="barracks" data-width="4" data-height="2">
+                        <span class="icon">⚔️</span>
+                        <div class="info">
+                            <div class="name">兵营</div>
+                            <div class="size">4×2</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 信息面板 -->
+                <div class="info-panel">
+                    <div class="info-title">📊 状态</div>
+                    <div class="info-row">
+                        <span class="info-label">角色</span>
+                        <span class="info-value">4/12</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">工作中</span>
+                        <span class="info-value">2</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">建筑</span>
+                        <span class="info-value">6</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">空闲格子</span>
+                        <span class="info-value">810 - 31</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">下次收获</span>
+                        <span class="info-value" style="color: var(--gold);">3:00</span>
+                    </div>
+                </div>
+
+                <!-- 选中信息 -->
+                <div class="selection-info" id="selectionInfo">
+                    <span id="selectionText">点击格子建造建筑</span>
+                </div>
+            </div>
+
+            <div class="hint">
+                <strong>提示:</strong> 点击左侧建造面板选择建筑 → 点击地图格子放置 | 点击建筑查看详情 | 点击角色移动
+            </div>
+
+            <div class="status-bar">
+                <div class="resource-chips">
+                    <div class="resource-chip"><span>🌿</span> <span>234</span> <span class="gain">+12</span></div>
+                    <div class="resource-chip"><span>🪵</span> <span>189</span> <span class="gain">+8</span></div>
+                    <div class="resource-chip"><span>⚒️</span> <span>156</span> <span class="gain">+5</span></div>
+                    <div class="resource-chip"><span>🐟</span> <span>89</span> <span class="gain">+3</span></div>
+                    <div class="resource-chip"><span>💰</span> <span>12,450</span></div>
+                </div>
+                <div class="bottom-info">
+                    📦 库存: 668 | 👥 4/12 | 🏠 设施 Lv.3 | ⏰ 下次收获: 3:00
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CELL_SIZE = 32;
+        const GRID_COLS = 90;
+        const GRID_ROWS = 9;
+
+        const mapScroll = document.getElementById('mapScroll');
+        const grid = document.getElementById('grid');
+        const buildPanel = document.getElementById('buildPanel');
+        const buildPreview = document.getElementById('buildPreview');
+        const selectionInfo = document.getElementById('selectionInfo');
+        const selectionText = document.getElementById('selectionText');
+
+        // 创建网格
+        function createGrid() {
+            for (let i = 0; i < GRID_COLS * GRID_ROWS; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell buildable';
+                cell.dataset.index = i;
+                cell.dataset.col = i % GRID_COLS;
+                cell.dataset.row = Math.floor(i / GRID_COLS);
+                grid.appendChild(cell);
+            }
+        }
+
+        createGrid();
+
+        // 建造状态
+        let selectedBuildType = null;
+        let selectedBuildWidth = 0;
+        let selectedBuildHeight = 0;
+        let selectedCell = null;
+
+        // 切换建造面板
+        buildPanel.classList.toggle('show');
+
+        // 选择建筑类型
+        document.querySelectorAll('.build-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.build-item').forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                selectedBuildType = item.dataset.type;
+                selectedBuildWidth = parseInt(item.dataset.width);
+                selectedBuildHeight = parseInt(item.dataset.height);
+                selectionInfo.classList.add('show');
+                selectionText.textContent = `已选择: ${item.querySelector('.name').textContent} (${selectedBuildWidth}×${selectedBuildHeight})，点击地图放置`;
+            });
+        });
+
+        // 点击格子
+        grid.addEventListener('click', (e) => {
+            if (e.target.classList.contains('cell')) {
+                // 清除之前选中
+                document.querySelectorAll('.cell.selected').forEach(c => c.classList.remove('selected'));
+
+                if (selectedBuildType) {
+                    const col = parseInt(e.target.dataset.col);
+                    const row = parseInt(e.target.dataset.row);
+
+                    // 检查是否可建造
+                    if (canBuildAt(col, row, selectedBuildWidth, selectedBuildHeight)) {
+                        // 建造建筑
+                        buildBuilding(selectedBuildType, col, row);
+                        selectionText.textContent = '建造成功！';
+                        setTimeout(() => selectionInfo.classList.remove('show'), 1000);
+                    } else {
+                        selectionText.textContent = '该位置不可建造！';
+                        e.target.classList.add('selected');
+                    }
+                } else {
+                    e.target.classList.add('selected');
+                    selectionText.textContent = `格子 (${e.target.dataset.col}, ${e.target.dataset.row})`;
+                }
+            }
+        });
+
+        // 鼠标悬停显示预览
+        grid.addEventListener('mousemove', (e) => {
+            if (selectedBuildType && e.target.classList.contains('cell')) {
+                const col = parseInt(e.target.dataset.col);
+                const row = parseInt(e.target.dataset.row);
+
+                buildPreview.style.left = (col * CELL_SIZE) + 'px';
+                buildPreview.style.top = (row * CELL_SIZE) + 'px';
+                buildPreview.style.width = (selectedBuildWidth * CELL_SIZE - 2) + 'px';
+                buildPreview.style.height = (selectedBuildHeight * CELL_SIZE - 2) + 'px';
+                buildPreview.classList.add('active');
+
+                // 颜色表示是否可建造
+                if (canBuildAt(col, row, selectedBuildWidth, selectedBuildHeight)) {
+                    buildPreview.style.borderColor = 'var(--green)';
+                    buildPreview.style.background = 'rgba(74, 222, 128, 0.2)';
+                } else {
+                    buildPreview.style.borderColor = 'var(--red)';
+                    buildPreview.style.background = 'rgba(255, 107, 107, 0.2)';
+                }
+            }
+        });
+
+        grid.addEventListener('mouseleave', () => {
+            buildPreview.classList.remove('active');
+        });
+
+        // 检查是否可建造
+        function canBuildAt(col, row, width, height) {
+            // 检查边界
+            if (col + width > GRID_COLS || row + height > GRID_ROWS) {
+                return false;
+            }
+
+            // 检查是否与现有建筑重叠
+            const buildings = document.querySelectorAll('.building');
+            for (const b of buildings) {
+                const bLeft = parseInt(b.style.left);
+                const bTop = parseInt(b.style.top);
+                const bWidth = parseInt(getComputedStyle(b).width);
+                const bHeight = parseInt(getComputedStyle(b).height);
+
+                const bCol = bLeft / CELL_SIZE;
+                const bRow = bTop / CELL_SIZE;
+                const bCols = bWidth / CELL_SIZE;
+                const bRows = bHeight / CELL_SIZE;
+
+                // 检查重叠
+                if (col < bCol + bCols && col + width > bCol &&
+                    row < bRow + bRows && row + height > bRow) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // 建造建筑
+        function buildBuilding(type, col, row) {
+            const building = document.createElement('div');
+            building.className = 'building';
+            building.dataset.type = type;
+            building.style.left = (col * CELL_SIZE) + 'px';
+            building.style.top = (row * CELL_SIZE) + 'px';
+
+            const icons = {
+                'cabin': '🪓',
+                'herb-garden': '🌿',
+                'mine': '⛏️',
+                'fishing-spot': '🎣',
+                'workshop': '🔨',
+                'storage': '📦',
+                'barracks': '⚔️'
+            };
+
+            building.innerHTML = `
+                <span class="icon">${icons[type]}</span>
+                <span class="level">新建</span>
+            `;
+
+            mapScroll.appendChild(building);
+
+            // 创建飘字
+            createFloatingText(col * CELL_SIZE + 16, row * CELL_SIZE, '🏗️ +1');
+        }
+
+        // 角色移动
+        let selectedCharacter = null;
+
+        document.querySelectorAll('.character').forEach(char => {
+            char.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                if (selectedCharacter) {
+                    selectedCharacter.style.outline = '';
+                }
+
+                selectedCharacter = char;
+                char.style.outline = '3px solid var(--gold)';
+
+                selectionInfo.classList.add('show');
+                selectionText.textContent = `选中 ${char.textContent}，点击地图移动`;
+            });
+        });
+
+        // 点击地图移动角色
+        mapScroll.addEventListener('click', (e) => {
+            if (selectedCharacter && !e.target.classList.contains('cell') && !e.target.classList.contains('building')) {
+                const rect = mapScroll.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // 吸附到格子
+                const col = Math.floor(x / CELL_SIZE);
+                const row = Math.floor(y / CELL_SIZE);
+
+                // 目标位置（角色居中）
+                const targetX = col * CELL_SIZE;
+                const targetY = row * CELL_SIZE;
+
+                selectedCharacter.style.left = targetX + 'px';
+                selectedCharacter.style.top = targetY + 'px';
+
+                // 创建飘字
+                createFloatingText(targetX + 12, targetY, '💨');
+
+                selectionText.textContent = `${selectedCharacter.textContent} 已移动到 (${col}, ${row})`;
+                selectedCharacter.style.outline = '';
+                selectedCharacter = null;
+
+                setTimeout(() => selectionInfo.classList.remove('show'), 1500);
+            }
+        });
+
+        // 飘字效果
+        function createFloatingText(x, y, text) {
+            const float = document.createElement('div');
+            float.className = 'floating-text';
+            float.style.left = x + 'px';
+            float.style.top = y + 'px';
+            float.textContent = text;
+            mapScroll.appendChild(float);
+            setTimeout(() => float.remove(), 800);
+        }
+
+        // 随机产出飘字
+        setInterval(() => {
+            const chars = document.querySelectorAll('.character.working');
+            if (chars.length > 0) {
+                const char = chars[Math.floor(Math.random() * chars.length)];
+                const x = parseInt(char.style.left) + 12;
+                const y = parseInt(char.style.top) - 10;
+                const resources = ['🌿+1', '🪵+1', '⚒️+1', '🐟+1'];
+                createFloatingText(x, y, resources[Math.floor(Math.random() * resources.length)]);
+            }
+        }, 2000);
+
+        // 角色随机移动
+        setInterval(() => {
+            document.querySelectorAll('.character:not(.working)').forEach(char => {
+                if (Math.random() > 0.7) {
+                    const newX = Math.floor(Math.random() * (GRID_COLS - 5)) * CELL_SIZE;
+                    const newY = Math.floor(Math.random() * (GRID_ROWS - 2)) * CELL_SIZE;
+                    char.style.left = newX + 'px';
+                    char.style.top = newY + 'px';
+                }
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

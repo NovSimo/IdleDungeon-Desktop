@@ -1,0 +1,36 @@
+[gd_scene load_steps=3 format=3 uid="uid://grid_map_scene"]
+
+[ext_resource type="Script" path="res://scripts/grid/grid_manager.gd" id="1_gm"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_preview"]
+bg_color = Color(0.29, 0.87, 0.5, 0.4)
+border_width_left = 2
+border_width_right = 2
+border_width_top = 2
+border_width_bottom = 2
+border_color = Color(0.29, 0.87, 0.5, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="GridMap" type="Node2D"]
+script = ExtResource("1_gm")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(288, 144)
+limit_left = 0
+limit_top = 0
+limit_right = 2880
+limit_bottom = 288
+zoom = Vector2(1, 1)
+
+[node name="GridContainer" type="Node2D" parent="."]
+
+[node name="PreviewRect" type="ColorRect" parent="."]
+visible = false
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 96.0
+offset_bottom = 96.0
+mouse_filter = 2
